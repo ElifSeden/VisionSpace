@@ -1,0 +1,4 @@
+scrapy
+Pillow
+google-generativeai
+pydantic
