@@ -34,6 +34,19 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   List<StoreOffer> get _offers {
+    if (widget.product.buyUrl.isNotEmpty) {
+      return [
+        StoreOffer(
+          storeName: widget.product.storeName.isNotEmpty
+              ? widget.product.storeName
+              : widget.product.brand,
+          price: widget.product.price,
+          url: widget.product.buyUrl,
+          buttonColor: AppColors.sage,
+        ),
+      ];
+    }
+
     return [
       const StoreOffer(
         storeName: 'trendyol',
@@ -165,7 +178,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ),
                 const SizedBox(height: 28),
                 Text(
-                  l10n.productPurchaseOptions,
+                  widget.product.buyUrl.isNotEmpty
+                      ? (widget.product.storeName.isNotEmpty
+                            ? widget.product.storeName
+                            : l10n.productPurchaseOptions)
+                      : l10n.productPurchaseOptions,
                   style: textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w900,
                   ),
@@ -247,7 +264,9 @@ class _ProductHeader extends StatelessWidget {
             child: IconButton(
               onPressed: onToggleFavorite,
               icon: Icon(
-                isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                isFavorite
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
               ),
               color: isFavorite ? const Color(0xFFE84D7A) : AppColors.ink,
             ),

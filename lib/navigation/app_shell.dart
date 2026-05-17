@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/theme/app_colors.dart';
+import '../data/sample_furniture.dart';
 import '../features/favorites/favorites_page.dart';
 import '../features/home/home_page.dart';
 import '../features/profile/profile_page.dart';
 import '../features/scan/scan_page.dart';
 import '../l10n/app_localizations.dart';
+import '../services/app_notification_service.dart';
 import '../services/decorator_ai_api.dart';
 
 class AppShell extends StatefulWidget {
@@ -34,6 +36,7 @@ class _AppShellState extends State<AppShell> {
     _index = widget.initialIndex.clamp(0, 3).toInt();
     _persistSelectedIndex(_index);
     _loadFurnitureState();
+    AppNotificationService.instance.loadNotifications();
   }
 
   Future<void> _loadFurnitureState() async {
@@ -64,14 +67,29 @@ class _AppShellState extends State<AppShell> {
   }
 
   void _toggleFavorite(String furnitureId) {
+    final wasFavorite = _favoriteFurnitureIds.contains(furnitureId);
     setState(() {
-      if (_favoriteFurnitureIds.contains(furnitureId)) {
+      if (wasFavorite) {
         _favoriteFurnitureIds.remove(furnitureId);
       } else {
         _favoriteFurnitureIds.add(furnitureId);
       }
     });
     _persistSet(_favoriteFurnitureKey, _favoriteFurnitureIds);
+    String? itemName;
+    for (final item in sampleFurniture) {
+      if (item.id == furnitureId) {
+        itemName = item.title;
+        break;
+      }
+    }
+    if (itemName != null) {
+      if (wasFavorite) {
+        AppNotificationService.instance.addFavoriteRemoved(itemName);
+      } else {
+        AppNotificationService.instance.addFavoriteAdded(itemName);
+      }
+    }
   }
 
   @override
@@ -105,11 +123,11 @@ class _AppShellState extends State<AppShell> {
                 height: 66,
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 decoration: BoxDecoration(
-                  color: AppColors.ink,
+                  color: AppColors.surface.withValues(alpha: 0.96),
                   borderRadius: BorderRadius.circular(28),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.22),
+                      color: AppColors.ink.withValues(alpha: 0.10),
                       blurRadius: 26,
                       offset: const Offset(0, 14),
                     ),
@@ -176,7 +194,7 @@ class _NavItem extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           height: 46,
           decoration: BoxDecoration(
-            color: selected ? Colors.white : Colors.transparent,
+            color: selected ? AppColors.sage : Colors.transparent,
             borderRadius: BorderRadius.circular(22),
           ),
           child: Row(
@@ -185,7 +203,7 @@ class _NavItem extends StatelessWidget {
               Icon(
                 icon,
                 size: 22,
-                color: selected ? AppColors.ink : Colors.white70,
+                color: selected ? Colors.white : AppColors.muted,
               ),
               if (selected) ...[
                 const SizedBox(width: 6),
@@ -194,7 +212,7 @@ class _NavItem extends StatelessWidget {
                     label,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: AppColors.ink,
+                      color: Colors.white,
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
                     ),

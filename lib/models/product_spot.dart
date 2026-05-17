@@ -9,6 +9,7 @@ class ProductSpot {
     required this.top,
     required this.imageUrl,
     required this.buyUrl,
+    this.storeName = '',
   });
 
   final String id;
@@ -20,6 +21,7 @@ class ProductSpot {
   final double top;
   final String imageUrl;
   final String buyUrl;
+  final String storeName;
 
   factory ProductSpot.fromMap(String id, Map<String, dynamic> data) {
     return ProductSpot(
@@ -32,6 +34,7 @@ class ProductSpot {
       top: (data['top'] as num?)?.toDouble() ?? 0,
       imageUrl: data['imageUrl'] as String? ?? '',
       buyUrl: data['buyUrl'] as String? ?? '',
+      storeName: data['storeName'] as String? ?? '',
     );
   }
 
@@ -45,6 +48,7 @@ class ProductSpot {
       'top': top,
       'imageUrl': imageUrl,
       'buyUrl': buyUrl,
+      'storeName': storeName,
     };
   }
 }

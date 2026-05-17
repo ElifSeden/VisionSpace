@@ -10,6 +10,7 @@ import 'package:decorator_ai/main.dart';
 import 'package:decorator_ai/l10n/app_localizations.dart';
 import 'package:decorator_ai/models/design_project.dart';
 import 'package:decorator_ai/navigation/app_shell.dart';
+import 'package:decorator_ai/services/app_notification_service.dart';
 import 'package:decorator_ai/services/decorator_ai_api.dart';
 
 void main() {
@@ -37,7 +38,7 @@ void main() {
     await tester.pump();
     final l10n = await AppLocalizations.delegate.load(const Locale('en'));
 
-    expect(find.text(l10n.scanTitle), findsOneWidget);
+    expect(find.text('Scan Your Room'), findsOneWidget);
     expect(find.text(l10n.welcomeStartScan), findsNothing);
   });
 
@@ -63,7 +64,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
 
       final prefs = await SharedPreferences.getInstance();
-      expect(find.text(l10n.scanTitle), findsOneWidget);
+      expect(find.text('Scan Your Room'), findsOneWidget);
       expect(prefs.getBool(AppShell.enteredAppKey), isTrue);
       expect(prefs.getInt(AppShell.selectedTabKey), 1);
     },
@@ -105,8 +106,10 @@ void main() {
 
       expect(find.text(l10n.onboardingLocationQuestion), findsOneWidget);
       expect(find.text(l10n.onboardingSkip), findsOneWidget);
-      
-      final mapCenterBtn = find.byKey(const ValueKey('onboarding-select-map-center'));
+
+      final mapCenterBtn = find.byKey(
+        const ValueKey('onboarding-select-map-center'),
+      );
       await tester.ensureVisible(mapCenterBtn);
       await tester.tap(mapCenterBtn);
       await tester.pump();
@@ -163,7 +166,6 @@ void main() {
 
   testWidgets('new scan card opens the scan tab', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({});
-    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
 
     await tester.pumpWidget(
       const MaterialApp(
@@ -174,16 +176,18 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text(l10n.homeNewScanBadge), findsOneWidget);
+    expect(find.text('Start Scan'), findsOneWidget);
 
-    await tester.tap(find.text(l10n.homeNewScanBadge));
+    await tester.tap(find.text('Start Scan'));
     await tester.pump();
 
     expect(find.byType(ScanPage), findsOneWidget);
-    expect(find.text(l10n.scanTitle), findsOneWidget);
+    expect(find.text('Scan Your Room'), findsOneWidget);
   });
 
-  testWidgets('tapping example furniture card opens product detail', (WidgetTester tester) async {
+  testWidgets('tapping example furniture card opens product detail', (
+    WidgetTester tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     final l10n = await AppLocalizations.delegate.load(const Locale('en'));
 
@@ -198,12 +202,12 @@ void main() {
     await tester.pump();
 
     final sofaFinder = find.text('Modern Sofa').first;
-    
+
     // Scroll down to make it visible (from ~910 to ~410 on a 600 height screen)
     await tester.drag(find.byType(Scrollable).first, const Offset(0, -500));
     await tester.pump();
     await tester.pump();
-    
+
     // Tap the first example furniture
     await tester.tap(sofaFinder);
     await tester.pump();
@@ -213,31 +217,39 @@ void main() {
     expect(find.text(l10n.productDetailTitle), findsOneWidget);
   });
 
-  testWidgets('profile settings panel contains notification toggles and language selector', (WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues({});
-    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+  testWidgets(
+    'profile settings panel contains notification toggles and language selector',
+    (WidgetTester tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final l10n = await AppLocalizations.delegate.load(const Locale('en'));
 
-    await tester.pumpWidget(
-      const MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(body: ProfilePage()),
-      ),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: ProfilePage()),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    expect(find.text(l10n.profileSettingsTitle), findsOneWidget);
-    expect(find.text(l10n.profileSettingAuthReminders), findsOneWidget);
-    expect(find.text(l10n.profileSettingAiUpdates), findsOneWidget);
-    expect(find.text(l10n.profileSettingLanguage), findsOneWidget);
-    expect(find.text('🇺🇸'), findsOneWidget);
-  });
+      expect(find.text(l10n.profileSettingsTitle), findsOneWidget);
+      expect(find.text(l10n.profileSettingAuthReminders), findsOneWidget);
+      expect(find.text(l10n.profileSettingAiUpdates), findsOneWidget);
+      expect(find.text(l10n.profileSettingLanguage), findsOneWidget);
+      expect(find.text('🇺🇸'), findsOneWidget);
+    },
+  );
 
-  testWidgets('favorites page item opens product detail', (WidgetTester tester) async {
+  testWidgets('favorites page item opens product detail', (
+    WidgetTester tester,
+  ) async {
     SharedPreferences.setMockInitialValues({
       AppShell.enteredAppKey: true,
       AppShell.selectedTabKey: 2, // Go to favorites tab directly
-      'favorite_furniture_ids': ['modern-sofa', 'wooden-chair'], // Mock some favorite IDs
+      'favorite_furniture_ids': [
+        'modern-sofa',
+        'wooden-chair',
+      ], // Mock some favorite IDs
     });
 
     final l10n = await AppLocalizations.delegate.load(const Locale('en'));
@@ -265,8 +277,12 @@ void main() {
     expect(find.text(l10n.productDetailTitle), findsOneWidget);
   });
 
-  testWidgets('notifications page shows empty state and correct title', (WidgetTester tester) async {
-    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+  testWidgets('notifications page shows cards and correct title', (
+    WidgetTester tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    await AppNotificationService.instance.addAiDesignReady();
+    await AppNotificationService.instance.addFavoriteAdded('Modern Sofa');
 
     await tester.pumpWidget(
       const MaterialApp(
@@ -277,8 +293,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text(l10n.notificationsTitle), findsOneWidget);
-    expect(find.text(l10n.noNotificationsMessage), findsOneWidget);
+    expect(find.text('Notifications'), findsOneWidget);
+    expect(find.text('New AI Design Ready'), findsOneWidget);
+    expect(find.text('Added to Favorites'), findsOneWidget);
   });
 }
 

@@ -13,16 +13,28 @@ class FirestoreDecoratorAiApi implements DecoratorAiApi {
   FirestoreDecoratorAiApi({
     FirebaseFirestore? firestore,
     DecoratorAiApi fallback = const MockDecoratorAiApi(),
-  }) : _firestore = firestore ?? FirebaseFirestore.instanceFor(app: Firebase.app(), databaseId: 'default'),
+  }) : _firestore = firestore ?? _defaultFirestore(),
        _fallback = fallback;
 
-  final FirebaseFirestore _firestore;
+  final FirebaseFirestore? _firestore;
   final DecoratorAiApi _fallback;
+
+  static FirebaseFirestore? _defaultFirestore() {
+    if (Firebase.apps.isEmpty) return null;
+
+    return FirebaseFirestore.instanceFor(
+      app: Firebase.app(),
+      databaseId: 'default',
+    );
+  }
 
   @override
   Future<List<DesignProject>> fetchProjects() async {
+    final firestore = _firestore;
+    if (firestore == null) return _fallback.fetchProjects();
+
     try {
-      final snapshot = await _firestore
+      final snapshot = await firestore
           .collection('designProjects')
           .where('isPublished', isEqualTo: true)
           .orderBy('sortOrder')
@@ -53,8 +65,10 @@ class FirestoreDecoratorAiApi implements DecoratorAiApi {
 
   @override
   Future<DesignProject> analyzeSpace({required String scanId}) async {
+    final firestore = _firestore;
+
     try {
-      await _firestore.collection('scans').add({
+      await firestore?.collection('scans').add({
         'localScanId': scanId,
         'status': 'queued',
         'createdAt': FieldValue.serverTimestamp(),

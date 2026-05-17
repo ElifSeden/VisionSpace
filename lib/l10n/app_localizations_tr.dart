@@ -275,7 +275,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get productDetailTitle => 'Ürün Detayı';
 
   @override
-  String get productGoToProduct => 'Ürüne Git';
+  String get productGoToProduct => 'Ürünü Gör';
 
   @override
   String productStoreOpenFailed(Object storeName) {
@@ -328,13 +328,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get profileBirthdayNotSet => 'Doğum tarihi ayarlanmadı';
 
   @override
-  String get profileSettingsTitle => 'Ayarlar';
+  String get profileSettingsTitle => 'Bildirim Ayarları';
 
   @override
-  String get profileSettingAuthReminders => 'Kimlik Doğrulama Hatırlatıcıları';
+  String get profileSettingAuthReminders => 'Yerel Bildirimler';
 
   @override
-  String get profileSettingAiUpdates => 'Tasarım Önermesi Durum Güncellemeleri';
+  String get profileSettingAiUpdates => 'Uzak Bildirimler';
 
   @override
   String get authReminderTitle => 'İlerlemenizi kaydetmek için giriş yapın!';
@@ -363,9 +363,186 @@ class AppLocalizationsTr extends AppLocalizations {
   String get notificationsTitle => 'Bildirimler';
 
   @override
-  String get noNotificationsMessage => 'Bildirim bulunmuyor';
+  String get noNotificationsMessage => 'Henüz bildirim yok';
 
   @override
   String get noFavoritesMessage =>
       'Henüz favori mobilya yok. Eklemek için ana ekrandaki kalp simgesine dokunun.';
+
+  @override
+  String homeGreeting(Object name) {
+    return 'Hi $name 👋';
+  }
+
+  @override
+  String get homeGreetingFallback => 'Hi 👋';
+
+  @override
+  String get homeReadySubtitle => 'Odanı yeniden tasarlamaya hazır mısın?';
+
+  @override
+  String get categoryChair => 'Sandalye';
+
+  @override
+  String get categorySofa => 'Koltuk';
+
+  @override
+  String get categoryTable => 'Masa';
+
+  @override
+  String get categoryLamp => 'Lamba';
+
+  @override
+  String get categoryDecor => 'Dekor';
+
+  @override
+  String get recommendedFurniture => 'Önerilen Mobilyalar';
+
+  @override
+  String get startScan => 'Taramayı Başlat';
+
+  @override
+  String get takePhoto => 'Fotoğraf Çek';
+
+  @override
+  String get howItWorks => 'Nasıl Çalışır?';
+
+  @override
+  String get takeAPhoto => 'Fotoğraf çek';
+
+  @override
+  String get aiAnalysis => 'AI Analizi';
+
+  @override
+  String get getIdeas => 'Fikirleri Gör';
+
+  @override
+  String get scanYourRoom => 'Odanı Tara';
+
+  @override
+  String get scanPremiumSubtitle =>
+      'Mekanını yakala, AI sana uygun mobilyaları önersin.';
+
+  @override
+  String get scanPhotoDescription =>
+      'Odanı doğal ışıkta net şekilde kadraja al.';
+
+  @override
+  String get scanAnalysisDescription =>
+      'VisionSpace oda stilini ve yerleşimini okur.';
+
+  @override
+  String get scanIdeasDescription => 'Mobilya ve dekor önerilerini anında gör.';
+
+  @override
+  String get aiRoomScan => 'AI ODA TARAMASI';
+
+  @override
+  String get aiRoomScanBody =>
+      'Odanın fotoğrafını çek ve AI destekli mobilya fikirleri al.';
+
+  @override
+  String get aiSuggestions => 'AI Önerileri';
+
+  @override
+  String get freshAiIdeas => 'Yeni AI stil fikirleri';
+
+  @override
+  String get freshAiIdeasBody =>
+      'Kişiselleştirilmiş dekor eşleşmeleri için odanı tara.';
+
+  @override
+  String get myFavorites => 'Favorilerim';
+
+  @override
+  String get favoritesSubtitle =>
+      'Sonraki oda yenilemen için kaydedilen mobilya ve dekor fikirleri.';
+
+  @override
+  String get all => 'Tümü';
+
+  @override
+  String get unread => 'Okunmamış';
+
+  @override
+  String get offers => 'Teklifler';
+
+  @override
+  String get updates => 'Güncellemeler';
+
+  @override
+  String get editProfile => 'Profili Düzenle';
+
+  @override
+  String get personalInformation => 'Kişisel Bilgiler';
+
+  @override
+  String get emailNotConnected => 'E-posta bağlı değil';
+
+  @override
+  String get guestUser => 'Misafir Kullanıcı';
+
+  @override
+  String get notSet => 'Ayarlanmadı';
+
+  @override
+  String get support => 'Destek';
+
+  @override
+  String get read => 'Oku';
+
+  @override
+  String get addedToFavorites => 'Favorilere Eklendi';
+
+  @override
+  String get removedFromFavorites => 'Favorilerden Çıkarıldı';
+
+  @override
+  String get welcomeToVisionSpace => 'VisionSpace’e Hoş Geldin';
+
+  @override
+  String get newAiDesignReady => 'Yeni AI Tasarım Hazır';
+
+  @override
+  String get designSaved => 'Tasarım Kaydedildi';
+
+  @override
+  String get profileUpdated => 'Profil Güncellendi';
+
+  @override
+  String favoriteAddedDescription(Object itemName) {
+    return '$itemName favorilerine eklendi.';
+  }
+
+  @override
+  String favoriteRemovedDescription(Object itemName) {
+    return '$itemName favorilerinden çıkarıldı.';
+  }
+
+  @override
+  String get welcomeNotificationDescription => 'Hesabın başarıyla oluşturuldu.';
+
+  @override
+  String get newAiDesignReadyDescription =>
+      'AI destekli oda tasarım önerin hazır.';
+
+  @override
+  String get designSavedDescription =>
+      'Oda tasarım fikrin başarıyla kaydedildi.';
+
+  @override
+  String get profileUpdatedDescription => 'Profil bilgilerin güncellendi.';
+
+  @override
+  String get justNow => 'Az önce';
+
+  @override
+  String get bestResultsNaturalLight => 'En iyi sonuç için doğal ışık';
+
+  @override
+  String get tipsForBestResults => 'En iyi sonuçlar için ipuçları';
+
+  @override
+  String get scanTipsBody =>
+      'Doğru AI önerileri için odanın iyi aydınlatılmış ve düzenli olduğundan emin ol.';
 }

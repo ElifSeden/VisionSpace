@@ -557,7 +557,7 @@ abstract class AppLocalizations {
   /// No description provided for @productGoToProduct.
   ///
   /// In en, this message translates to:
-  /// **'Go to Product'**
+  /// **'View Product'**
   String get productGoToProduct;
 
   /// Shown when an external store URL cannot be opened.
@@ -653,19 +653,19 @@ abstract class AppLocalizations {
   /// No description provided for @profileSettingsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Settings'**
+  /// **'Notification Settings'**
   String get profileSettingsTitle;
 
   /// No description provided for @profileSettingAuthReminders.
   ///
   /// In en, this message translates to:
-  /// **'Authentication Reminders'**
+  /// **'Local Notifications'**
   String get profileSettingAuthReminders;
 
   /// No description provided for @profileSettingAiUpdates.
   ///
   /// In en, this message translates to:
-  /// **'Design Suggestion Status Updates'**
+  /// **'Remote Notifications'**
   String get profileSettingAiUpdates;
 
   /// No description provided for @authReminderTitle.
@@ -719,7 +719,7 @@ abstract class AppLocalizations {
   /// No description provided for @noNotificationsMessage.
   ///
   /// In en, this message translates to:
-  /// **'There are no notifications'**
+  /// **'No notifications yet'**
   String get noNotificationsMessage;
 
   /// No description provided for @noFavoritesMessage.
@@ -727,6 +727,330 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No favorite furniture yet. Tap a heart on the home screen to add one.'**
   String get noFavoritesMessage;
+
+  /// No description provided for @homeGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi {name} 👋'**
+  String homeGreeting(Object name);
+
+  /// No description provided for @homeGreetingFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Hi 👋'**
+  String get homeGreetingFallback;
+
+  /// No description provided for @homeReadySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to redesign your room?'**
+  String get homeReadySubtitle;
+
+  /// No description provided for @categoryChair.
+  ///
+  /// In en, this message translates to:
+  /// **'Chair'**
+  String get categoryChair;
+
+  /// No description provided for @categorySofa.
+  ///
+  /// In en, this message translates to:
+  /// **'Sofa'**
+  String get categorySofa;
+
+  /// No description provided for @categoryTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Table'**
+  String get categoryTable;
+
+  /// No description provided for @categoryLamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Lamp'**
+  String get categoryLamp;
+
+  /// No description provided for @categoryDecor.
+  ///
+  /// In en, this message translates to:
+  /// **'Decor'**
+  String get categoryDecor;
+
+  /// No description provided for @recommendedFurniture.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended Furniture'**
+  String get recommendedFurniture;
+
+  /// No description provided for @startScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Scan'**
+  String get startScan;
+
+  /// No description provided for @takePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take Photo'**
+  String get takePhoto;
+
+  /// No description provided for @howItWorks.
+  ///
+  /// In en, this message translates to:
+  /// **'How it works'**
+  String get howItWorks;
+
+  /// No description provided for @takeAPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo'**
+  String get takeAPhoto;
+
+  /// No description provided for @aiAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Analysis'**
+  String get aiAnalysis;
+
+  /// No description provided for @getIdeas.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Ideas'**
+  String get getIdeas;
+
+  /// No description provided for @scanYourRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Your Room'**
+  String get scanYourRoom;
+
+  /// No description provided for @scanPremiumSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture your space and let AI suggest furniture that fits.'**
+  String get scanPremiumSubtitle;
+
+  /// No description provided for @scanPhotoDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Frame your room clearly with natural lighting.'**
+  String get scanPhotoDescription;
+
+  /// No description provided for @scanAnalysisDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'VisionSpace reads the room style and layout.'**
+  String get scanAnalysisDescription;
+
+  /// No description provided for @scanIdeasDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Review furniture and decor suggestions instantly.'**
+  String get scanIdeasDescription;
+
+  /// No description provided for @aiRoomScan.
+  ///
+  /// In en, this message translates to:
+  /// **'AI ROOM SCAN'**
+  String get aiRoomScan;
+
+  /// No description provided for @aiRoomScanBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo of your room and get AI-powered furniture ideas.'**
+  String get aiRoomScanBody;
+
+  /// No description provided for @aiSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Suggestions'**
+  String get aiSuggestions;
+
+  /// No description provided for @freshAiIdeas.
+  ///
+  /// In en, this message translates to:
+  /// **'Fresh AI styling ideas'**
+  String get freshAiIdeas;
+
+  /// No description provided for @freshAiIdeasBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan your room to unlock personalized decor matches.'**
+  String get freshAiIdeasBody;
+
+  /// No description provided for @myFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'My Favorites'**
+  String get myFavorites;
+
+  /// No description provided for @favoritesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved furniture and decor ideas for your next room refresh.'**
+  String get favoritesSubtitle;
+
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
+  /// No description provided for @unread.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
+  String get unread;
+
+  /// No description provided for @offers.
+  ///
+  /// In en, this message translates to:
+  /// **'Offers'**
+  String get offers;
+
+  /// No description provided for @updates.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates'**
+  String get updates;
+
+  /// No description provided for @editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile'**
+  String get editProfile;
+
+  /// No description provided for @personalInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal Information'**
+  String get personalInformation;
+
+  /// No description provided for @emailNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'No e-mail connected'**
+  String get emailNotConnected;
+
+  /// No description provided for @guestUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest User'**
+  String get guestUser;
+
+  /// No description provided for @notSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get notSet;
+
+  /// No description provided for @support.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get support;
+
+  /// No description provided for @read.
+  ///
+  /// In en, this message translates to:
+  /// **'Read'**
+  String get read;
+
+  /// No description provided for @addedToFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to Favorites'**
+  String get addedToFavorites;
+
+  /// No description provided for @removedFromFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from Favorites'**
+  String get removedFromFavorites;
+
+  /// No description provided for @welcomeToVisionSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to VisionSpace'**
+  String get welcomeToVisionSpace;
+
+  /// No description provided for @newAiDesignReady.
+  ///
+  /// In en, this message translates to:
+  /// **'New AI Design Ready'**
+  String get newAiDesignReady;
+
+  /// No description provided for @designSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Design Saved'**
+  String get designSaved;
+
+  /// No description provided for @profileUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Updated'**
+  String get profileUpdated;
+
+  /// No description provided for @favoriteAddedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'{itemName} was added to your favorites.'**
+  String favoriteAddedDescription(Object itemName);
+
+  /// No description provided for @favoriteRemovedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'{itemName} was removed from your favorites.'**
+  String favoriteRemovedDescription(Object itemName);
+
+  /// No description provided for @welcomeNotificationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has been created successfully.'**
+  String get welcomeNotificationDescription;
+
+  /// No description provided for @newAiDesignReadyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your AI-powered room design suggestion is ready.'**
+  String get newAiDesignReadyDescription;
+
+  /// No description provided for @designSavedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your room design idea was saved successfully.'**
+  String get designSavedDescription;
+
+  /// No description provided for @profileUpdatedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile information was updated.'**
+  String get profileUpdatedDescription;
+
+  /// No description provided for @justNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get justNow;
+
+  /// No description provided for @bestResultsNaturalLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Best results in natural light'**
+  String get bestResultsNaturalLight;
+
+  /// No description provided for @tipsForBestResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Tips for best results'**
+  String get tipsForBestResults;
+
+  /// No description provided for @scanTipsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Make sure the room is well-lit and tidy for accurate AI suggestions.'**
+  String get scanTipsBody;
 }
 
 class _AppLocalizationsDelegate

@@ -277,7 +277,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get productDetailTitle => 'Product Detail';
 
   @override
-  String get productGoToProduct => 'Go to Product';
+  String get productGoToProduct => 'View Product';
 
   @override
   String productStoreOpenFailed(Object storeName) {
@@ -330,13 +330,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileBirthdayNotSet => 'Birthday not set';
 
   @override
-  String get profileSettingsTitle => 'Settings';
+  String get profileSettingsTitle => 'Notification Settings';
 
   @override
-  String get profileSettingAuthReminders => 'Authentication Reminders';
+  String get profileSettingAuthReminders => 'Local Notifications';
 
   @override
-  String get profileSettingAiUpdates => 'Design Suggestion Status Updates';
+  String get profileSettingAiUpdates => 'Remote Notifications';
 
   @override
   String get authReminderTitle => 'Sign in to save your progress!';
@@ -365,9 +365,189 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationsTitle => 'Notifications';
 
   @override
-  String get noNotificationsMessage => 'There are no notifications';
+  String get noNotificationsMessage => 'No notifications yet';
 
   @override
   String get noFavoritesMessage =>
       'No favorite furniture yet. Tap a heart on the home screen to add one.';
+
+  @override
+  String homeGreeting(Object name) {
+    return 'Hi $name 👋';
+  }
+
+  @override
+  String get homeGreetingFallback => 'Hi 👋';
+
+  @override
+  String get homeReadySubtitle => 'Ready to redesign your room?';
+
+  @override
+  String get categoryChair => 'Chair';
+
+  @override
+  String get categorySofa => 'Sofa';
+
+  @override
+  String get categoryTable => 'Table';
+
+  @override
+  String get categoryLamp => 'Lamp';
+
+  @override
+  String get categoryDecor => 'Decor';
+
+  @override
+  String get recommendedFurniture => 'Recommended Furniture';
+
+  @override
+  String get startScan => 'Start Scan';
+
+  @override
+  String get takePhoto => 'Take Photo';
+
+  @override
+  String get howItWorks => 'How it works';
+
+  @override
+  String get takeAPhoto => 'Take a photo';
+
+  @override
+  String get aiAnalysis => 'AI Analysis';
+
+  @override
+  String get getIdeas => 'Get Ideas';
+
+  @override
+  String get scanYourRoom => 'Scan Your Room';
+
+  @override
+  String get scanPremiumSubtitle =>
+      'Capture your space and let AI suggest furniture that fits.';
+
+  @override
+  String get scanPhotoDescription =>
+      'Frame your room clearly with natural lighting.';
+
+  @override
+  String get scanAnalysisDescription =>
+      'VisionSpace reads the room style and layout.';
+
+  @override
+  String get scanIdeasDescription =>
+      'Review furniture and decor suggestions instantly.';
+
+  @override
+  String get aiRoomScan => 'AI ROOM SCAN';
+
+  @override
+  String get aiRoomScanBody =>
+      'Take a photo of your room and get AI-powered furniture ideas.';
+
+  @override
+  String get aiSuggestions => 'AI Suggestions';
+
+  @override
+  String get freshAiIdeas => 'Fresh AI styling ideas';
+
+  @override
+  String get freshAiIdeasBody =>
+      'Scan your room to unlock personalized decor matches.';
+
+  @override
+  String get myFavorites => 'My Favorites';
+
+  @override
+  String get favoritesSubtitle =>
+      'Saved furniture and decor ideas for your next room refresh.';
+
+  @override
+  String get all => 'All';
+
+  @override
+  String get unread => 'Unread';
+
+  @override
+  String get offers => 'Offers';
+
+  @override
+  String get updates => 'Updates';
+
+  @override
+  String get editProfile => 'Edit Profile';
+
+  @override
+  String get personalInformation => 'Personal Information';
+
+  @override
+  String get emailNotConnected => 'No e-mail connected';
+
+  @override
+  String get guestUser => 'Guest User';
+
+  @override
+  String get notSet => 'Not set';
+
+  @override
+  String get support => 'Support';
+
+  @override
+  String get read => 'Read';
+
+  @override
+  String get addedToFavorites => 'Added to Favorites';
+
+  @override
+  String get removedFromFavorites => 'Removed from Favorites';
+
+  @override
+  String get welcomeToVisionSpace => 'Welcome to VisionSpace';
+
+  @override
+  String get newAiDesignReady => 'New AI Design Ready';
+
+  @override
+  String get designSaved => 'Design Saved';
+
+  @override
+  String get profileUpdated => 'Profile Updated';
+
+  @override
+  String favoriteAddedDescription(Object itemName) {
+    return '$itemName was added to your favorites.';
+  }
+
+  @override
+  String favoriteRemovedDescription(Object itemName) {
+    return '$itemName was removed from your favorites.';
+  }
+
+  @override
+  String get welcomeNotificationDescription =>
+      'Your account has been created successfully.';
+
+  @override
+  String get newAiDesignReadyDescription =>
+      'Your AI-powered room design suggestion is ready.';
+
+  @override
+  String get designSavedDescription =>
+      'Your room design idea was saved successfully.';
+
+  @override
+  String get profileUpdatedDescription =>
+      'Your profile information was updated.';
+
+  @override
+  String get justNow => 'Just now';
+
+  @override
+  String get bestResultsNaturalLight => 'Best results in natural light';
+
+  @override
+  String get tipsForBestResults => 'Tips for best results';
+
+  @override
+  String get scanTipsBody =>
+      'Make sure the room is well-lit and tidy for accurate AI suggestions.';
 }

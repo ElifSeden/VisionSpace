@@ -41,6 +41,7 @@ void main() {
       top: 0.5,
       imageUrl: 'https://example.com/lamp.jpg',
       buyUrl: 'https://example.com/lamp',
+      storeName: 'Example Store',
     );
 
     expect(product.toMap(), {
@@ -52,6 +53,7 @@ void main() {
       'top': 0.5,
       'imageUrl': 'https://example.com/lamp.jpg',
       'buyUrl': 'https://example.com/lamp',
+      'storeName': 'Example Store',
     });
   });
 }

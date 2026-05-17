@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/app_notification_service.dart';
 import '../../services/decorator_ai_api.dart';
 import '../design/design_detail_page.dart';
 
@@ -87,6 +88,7 @@ class _CameraScanPageState extends State<CameraScanPage> {
     try {
       final scan = await controller.takePicture();
       final project = await _api.analyzeSpace(scanId: scan.path);
+      await AppNotificationService.instance.addAiDesignReady();
 
       if (!mounted) return;
       setState(() => _isAnalyzing = false);

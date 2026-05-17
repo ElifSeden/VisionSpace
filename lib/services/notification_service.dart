@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -7,7 +8,12 @@ import 'package:timezone/timezone.dart' as tz;
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
+  try {
+    await Firebase.initializeApp();
+  } catch (error, stackTrace) {
+    debugPrint('Background Firebase initialization skipped: $error');
+    debugPrintStack(stackTrace: stackTrace);
+  }
   // Background message handling infrastructure.
   // When a data-only payload is received, we can show a local notification here if toggled on.
 }
@@ -16,27 +22,45 @@ class NotificationService {
   static final NotificationService instance = NotificationService._();
   NotificationService._();
 
-  final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
-  
+  final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
+
   static const String _prefLocalNotifications = 'pref_local_notifications';
   static const String _prefRemoteNotifications = 'pref_remote_notifications';
 
-  Future<void> initialize() async {
+  Future<void> initialize({bool enableRemoteNotifications = true}) async {
     tz.initializeTimeZones();
 
-    const initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/launcher_icon');
+    const initializationSettingsAndroid = AndroidInitializationSettings(
+      '@mipmap/launcher_icon',
+    );
+    const initializationSettingsDarwin = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
     const initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
+      iOS: initializationSettingsDarwin,
+      macOS: initializationSettingsDarwin,
     );
 
-    await _localNotifications.initialize(
-      settings: initializationSettings,
-    );
+    await _localNotifications.initialize(settings: initializationSettings);
+
+    if (!enableRemoteNotifications) return;
 
     // Request permissions for Android 13+ and iOS
-    await FirebaseMessaging.instance.requestPermission();
+    try {
+      await FirebaseMessaging.instance.requestPermission();
+    } catch (error, stackTrace) {
+      debugPrint('Remote notification permission request failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      return;
+    }
     await _localNotifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.requestNotificationsPermission();
 
     // Setup FCM foreground listener
@@ -68,7 +92,12 @@ class NotificationService {
     await prefs.setBool(_prefRemoteNotifications, enabled);
   }
 
-  Future<void> scheduleOnboardingReminders(String title, String body, String recurringTitle, String recurringBody) async {
+  Future<void> scheduleOnboardingReminders(
+    String title,
+    String body,
+    String recurringTitle,
+    String recurringBody,
+  ) async {
     final enabled = await isLocalNotificationsEnabled;
     if (!enabled) return;
 
@@ -77,7 +106,9 @@ class NotificationService {
       id: 1,
       title: title,
       body: body,
-      scheduledDate: tz.TZDateTime.now(tz.local).add(const Duration(minutes: 2)),
+      scheduledDate: tz.TZDateTime.now(
+        tz.local,
+      ).add(const Duration(minutes: 2)),
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'auth_reminders',
@@ -131,7 +162,8 @@ class NotificationService {
           android: AndroidNotificationDetails(
             'ai_updates',
             'Design AI Updates',
-            channelDescription: 'Notifications for when your AI designs are ready',
+            channelDescription:
+                'Notifications for when your AI designs are ready',
             importance: Importance.max,
             priority: Priority.high,
           ),

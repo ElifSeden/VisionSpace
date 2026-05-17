@@ -16,9 +16,20 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-  await NotificationService.instance.initialize();
+  var firebaseInitialized = false;
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    firebaseInitialized = true;
+  } catch (error, stackTrace) {
+    debugPrint('Firebase initialization skipped: $error');
+    debugPrintStack(stackTrace: stackTrace);
+  }
+  await NotificationService.instance.initialize(
+    enableRemoteNotifications: firebaseInitialized,
+  );
   await GoogleSignIn.instance.initialize();
 
   runApp(const DecoratorAiApp());

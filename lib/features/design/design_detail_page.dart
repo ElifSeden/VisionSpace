@@ -5,6 +5,7 @@ import '../../core/widgets/remote_image.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/design_project.dart';
 import '../../models/product_spot.dart';
+import '../../services/app_notification_service.dart';
 import '../product/product_detail_page.dart';
 
 class DesignDetailPage extends StatelessWidget {
@@ -33,7 +34,13 @@ class DesignDetailPage extends StatelessWidget {
                 ),
                 const Spacer(),
                 IconButton.filled(
-                  onPressed: () {},
+                  onPressed: () async {
+                    await AppNotificationService.instance.addDesignSaved();
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(l10n.designSaved)));
+                  },
                   icon: const Icon(Icons.bookmark_border_rounded),
                   style: IconButton.styleFrom(
                     backgroundColor: AppColors.surface,
