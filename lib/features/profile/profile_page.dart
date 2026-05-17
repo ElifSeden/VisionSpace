@@ -125,6 +125,18 @@ class _ProfilePageState extends State<ProfilePage> {
       await FirebaseAuth.instance.signInWithCredential(credential);
       await _addWelcomeNotificationOnce(googleUser.email);
       if (mounted) setState(() {});
+    } on GoogleSignInException catch (error) {
+      if (mounted) {
+        if (error.code == GoogleSignInExceptionCode.canceled) {
+          _showSnack('Sign In Cancelled');
+        } else {
+          _showSnack(
+            AppLocalizations.of(
+              context,
+            )!.profileGoogleSignInFailed(error.toString()),
+          );
+        }
+      }
     } catch (error) {
       if (mounted) {
         _showSnack(
@@ -533,7 +545,11 @@ class _ProfilePageState extends State<ProfilePage> {
     if (user == null) {
       return OutlinedButton.icon(
         onPressed: _signInWithGoogle,
-        icon: const _GoogleMark(),
+        icon: Image.asset(
+          'assets/brand_logo/google.png',
+          width: 22,
+          height: 22,
+        ),
         label: Text(l10n.profileSignInGoogle),
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.white,
@@ -675,69 +691,6 @@ class _ProfileSummary {
 
   final String displayName;
   final String email;
-}
-
-class _GoogleMark extends StatelessWidget {
-  const _GoogleMark();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 22,
-      height: 22,
-      alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-      ),
-      child: const Stack(
-        alignment: Alignment.center,
-        children: [
-          Text(
-            'G',
-            style: TextStyle(
-              color: Color(0xFF4285F4),
-              fontWeight: FontWeight.w900,
-              fontSize: 17,
-            ),
-          ),
-          Positioned(
-            right: 2,
-            bottom: 2,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Color(0xFF34A853),
-                shape: BoxShape.circle,
-              ),
-              child: SizedBox(width: 5, height: 5),
-            ),
-          ),
-          Positioned(
-            left: 2,
-            top: 2,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Color(0xFFEA4335),
-                shape: BoxShape.circle,
-              ),
-              child: SizedBox(width: 5, height: 5),
-            ),
-          ),
-          Positioned(
-            right: 2,
-            top: 2,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Color(0xFFFBBC05),
-                shape: BoxShape.circle,
-              ),
-              child: SizedBox(width: 5, height: 5),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 String? _formatBirthday(DateTime? birthday) {
