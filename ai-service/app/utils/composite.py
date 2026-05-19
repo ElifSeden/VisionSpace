@@ -229,18 +229,20 @@ def _load_product_image_raw(
 ) -> Image.Image | None:
     """Load a product image as RGBA without resizing.
 
-    Returns *None* when the image is unavailable, which signals the caller to
-    skip the normal render or draw a debug-only placement rectangle.
+    Supports both local files and remote URLs.  Remote images are downloaded
+    and cached under the product image directory so subsequent renders are fast.
+    Returns *None* when the image is unavailable or corrupt, which signals
+    the caller to use the rectangle fallback.
     """
     if not image_path:
         return None
-    try:
-        if image_path.startswith(("http://", "https://")):
-            response = requests.get(image_path, timeout=12)
-            response.raise_for_status()
-            with Image.open(BytesIO(response.content)) as image:
-                return _prepare_product_cutout(image)
 
+    # Remote URL — download with caching for speed on subsequent renders.
+    if image_path.startswith(("http://", "https://")):
+        return _download_and_cache(storage, image_path)
+
+    # Local file — try multiple candidate paths and apply background removal.
+    try:
         for path in _candidate_product_paths(storage, image_path):
             if not path.exists():
                 continue
@@ -248,7 +250,6 @@ def _load_product_image_raw(
                 return _prepare_product_cutout(image)
     except Exception as exc:
         logger.warning("product_image_load_failed", image_path=image_path, error=str(exc))
-        return None
     return None
 
 
@@ -305,6 +306,61 @@ def _background_color_from_corners(image: Image.Image) -> tuple[int, int, int] |
     if min(average) < 210:
         return None
     return average
+
+
+def _download_and_cache(
+    storage: LocalImageStorage,
+    url: str,
+) -> Image.Image | None:
+    """Download a remote image URL and cache it locally.
+
+    Returns the image as RGBA or None on any failure.
+    """
+    import hashlib
+    import io
+    import requests as req_lib
+
+    # Deterministic cache filename based on URL hash.
+    url_hash = hashlib.sha256(url.encode()).hexdigest()[:16]
+    ext = ".jpg"
+    for candidate in (".png", ".webp", ".jpg", ".jpeg"):
+        if candidate in url.lower():
+            ext = candidate
+            break
+    cache_relative = f"cache/{url_hash}{ext}"
+    cache_path = storage.resolve_product_image(cache_relative)
+
+    # Return cached version if available.
+    if cache_path.exists():
+        try:
+            with Image.open(cache_path) as img:
+                return img.convert("RGBA").copy()
+        except Exception:
+            cache_path.unlink(missing_ok=True)
+
+    # Download with timeout.
+    try:
+        resp = req_lib.get(url, timeout=15, stream=True)
+        if resp.status_code != 200:
+            logger.warning("product_image_download_failed", url=url[:120], status=resp.status_code)
+            return None
+        data = resp.content
+        if len(data) < 100:
+            return None
+    except Exception as exc:
+        logger.warning("product_image_download_error", url=url[:120], error=str(exc)[:200])
+        return None
+
+    # Save to cache and return.
+    try:
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        cache_path.write_bytes(data)
+        with Image.open(io.BytesIO(data)) as img:
+            return img.convert("RGBA").copy()
+    except Exception as exc:
+        logger.warning("product_image_decode_error", url=url[:120], error=str(exc)[:200])
+        cache_path.unlink(missing_ok=True)
+        return None
 
 
 def _bbox(polygon: list[list[float]]) -> tuple[float, float, float, float]:

@@ -260,13 +260,41 @@ def _first_valid_fallback_polygon(
 
 
 def _role_size(role: str) -> tuple[float, float]:
-    if role in {"sofa", "tv_unit", "console_table", "dining_table", "bed"}:
-        return 0.26, 0.18
-    if role in {"rug", "carpet"}:
-        return 0.34, 0.12
-    if role in {"floor_lamp", "lamp", "plant_pot", "side_table"}:
-        return 0.12, 0.24
-    return 0.18, 0.16
+    """Normalized width and height for a furniture role's placement polygon.
+
+    Width and height are expressed as fractions of the full image.
+    Height is the vertical extent of the polygon (visual height in the image).
+    """
+    sizes = {
+        # Large floor pieces
+        "bed": (0.35, 0.22),
+        "sofa": (0.30, 0.16),
+        "dining_table": (0.28, 0.18),
+        "desk": (0.24, 0.14),
+        "tv_unit": (0.26, 0.10),
+        "console_table": (0.22, 0.10),
+        # Medium pieces
+        "armchair": (0.16, 0.16),
+        "wardrobe": (0.18, 0.28),
+        "bookshelf": (0.14, 0.26),
+        "dresser": (0.18, 0.16),
+        "storage_unit": (0.16, 0.18),
+        "dining_chair": (0.10, 0.14),
+        "office_chair": (0.12, 0.14),
+        "coffee_table": (0.20, 0.10),
+        # Small accessories
+        "nightstand": (0.10, 0.12),
+        "side_table": (0.10, 0.12),
+        "floor_lamp": (0.08, 0.22),
+        "lamp": (0.08, 0.14),
+        "mirror": (0.12, 0.18),
+        "plant_pot": (0.08, 0.12),
+        # Floor coverings
+        "carpet": (0.36, 0.14),
+        "rug": (0.34, 0.12),
+        "curtain": (0.14, 0.30),
+    }
+    return sizes.get(role, (0.18, 0.14))
 
 
 def _rejection(product: dict, polygon: NormalizedPolygon, reasons: list[str]) -> PlacementRejection:

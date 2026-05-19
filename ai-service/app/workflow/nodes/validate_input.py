@@ -16,7 +16,10 @@ def validate_input_node(db: Session):
             raise ValidationStageError("Design job not found")
         if not LocalImageStorage().room_image_exists(state["room_image_path"]):
             raise ValidationStageError("Room image does not exist")
-        count = max(1, min(int(state.get("requested_design_count") or 1), get_settings().default_design_count))
+        count = max(1, min(
+            int(state.get("requested_design_count") or get_settings().default_design_count),
+            get_settings().default_design_count,
+        ))
         return {"requested_design_count": count}
 
     return node

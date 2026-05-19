@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from PIL import Image
+from PIL import Image, ImageOps
 
 from app.core.config import Settings, get_settings
 from app.core.errors import ImageStorageError
@@ -86,11 +86,17 @@ class LocalImageStorage:
                 f"Unable to write uploaded image under {self.settings.room_upload_dir}"
             ) from exc
 
+        # Apply EXIF orientation so mobile-camera images are stored upright.
+        # Without this, portrait photos from phones appear rotated 90° and
+        # width/height are swapped, breaking coordinate alignment downstream.
         try:
             with Image.open(absolute) as image:
                 image.verify()
             with Image.open(absolute) as image:
-                width, height = image.size
+                corrected = ImageOps.exif_transpose(image)
+                if corrected is not image:
+                    corrected.save(absolute, quality=95)
+                width, height = corrected.size
         except Exception as exc:
             absolute.unlink(missing_ok=True)
             raise ImageStorageError("Invalid image file") from exc

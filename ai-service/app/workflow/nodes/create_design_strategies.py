@@ -11,34 +11,85 @@ from app.workflow.state import DesignWorkflowState
 
 logger = structlog.get_logger(__name__)
 
-DEFAULT_ROLES = ["coffee_table", "rug", "floor_lamp"]
 SUPPORTED_ROLES = {
-    "dining_table",
-    "dining_chair",
-    "wardrobe",
-    "dresser",
-    "nightstand",
-    "console_table",
-    "mirror",
-    "bed",
-    "coffee_table",
-    "sofa",
-    "armchair",
-    "bookshelf",
-    "tv_unit",
-    "floor_lamp",
-    "carpet",
-    "rug",
-    "side_table",
-    "desk",
-    "storage_unit",
+    "dining_table", "dining_chair", "wardrobe", "dresser", "nightstand",
+    "console_table", "mirror", "bed", "coffee_table", "sofa", "armchair",
+    "bookshelf", "tv_unit", "floor_lamp", "carpet", "side_table",
+    "desk", "storage_unit", "office_chair", "curtain",
 }
-ROOM_DEFAULT_ROLES = {
-    "living_room": ["sofa", "coffee_table", "rug", "floor_lamp"],
-    "bedroom": ["bed", "nightstand", "dresser", "rug"],
-    "dining_room": ["dining_table", "dining_chair", "console_table"],
-    "office": ["desk", "bookshelf", "floor_lamp"],
+
+# Default roles by room type when no user preferences or AI output is available.
+_ROOM_TYPE_ROLES: dict[str, list[str]] = {
+    "bedroom": ["bed", "nightstand", "wardrobe", "dresser", "floor_lamp"],
+    "living_room": ["sofa", "coffee_table", "tv_unit", "armchair", "floor_lamp"],
+    "dining_room": ["dining_table", "dining_chair", "console_table", "carpet"],
+    "kitchen": ["dining_table", "dining_chair", "storage_unit"],
+    "office": ["desk", "office_chair", "bookshelf", "floor_lamp"],
+    "studio": ["sofa", "desk", "bookshelf", "floor_lamp", "carpet"],
 }
+ROOM_DEFAULT_ROLES = _ROOM_TYPE_ROLES  # alias for compatibility
+DEFAULT_ROLES = ["coffee_table", "floor_lamp", "carpet", "bookshelf"]
+
+_STYLE_PALETTE = [
+    "modern", "scandinavian", "minimalist", "industrial",
+    "traditional", "bohemian", "mid_century", "luxury",
+]
+
+
+def _roles_from_room_analysis(room_analysis: dict) -> list[str]:
+    """Extract furniture category labels detected in the room image."""
+    roles = []
+    for item in room_analysis.get("existing_furniture", []):
+        label = item.get("label", "")
+        if label and label not in roles:
+            roles.append(label)
+    return roles
+
+
+def _default_roles_for_room(room_type: str, detected_roles: list[str]) -> list[str]:
+    """Combine room-type defaults with detected furniture for smart fallback."""
+    base = list(_ROOM_TYPE_ROLES.get(room_type, DEFAULT_ROLES))
+    for role in detected_roles:
+        if role not in base:
+            base.append(role)
+    return base[:6]  # cap to avoid overly long lists
+
+
+def _room_type(room_analysis: dict) -> str:
+    architectural_context = room_analysis.get("architectural_context") or {}
+    return architectural_context.get("room_type") or room_analysis.get("room_type") or "living_room"
+
+
+def _strategy_room_analysis(room_analysis: dict, ignore_existing: bool) -> dict:
+    if not ignore_existing:
+        return room_analysis
+    return {
+        "room_type": _room_type(room_analysis),
+        "architectural_context": room_analysis.get("architectural_context") or {},
+        "available_placement_zones": room_analysis.get("available_placement_zones") or [],
+        "constraints": room_analysis.get("constraints") or {},
+        "lighting": room_analysis.get("lighting"),
+        "color_palette": room_analysis.get("color_palette") or [],
+        "detected_styles": room_analysis.get("detected_styles") or [],
+        "existing_objects_ignored": True,
+    }
+
+
+def _sanitize_strategy(
+    strategy: DesignStrategy,
+    room_analysis: dict,
+    prefs: dict,
+) -> DesignStrategy:
+    roles = [role for role in strategy.furniture_roles if role in SUPPORTED_ROLES]
+    if not roles:
+        roles = ROOM_DEFAULT_ROLES.get(_room_type(room_analysis), DEFAULT_ROLES)
+    return DesignStrategy(
+        design_index=strategy.design_index,
+        title=strategy.title,
+        style=strategy.style or prefs.get("design_style") or "balanced",
+        furniture_roles=roles,
+        notes=strategy.notes,
+    )
 
 
 def create_design_strategies_node(db: Session):
@@ -47,11 +98,13 @@ def create_design_strategies_node(db: Session):
         settings = get_settings()
         prefs = state.get("user_preferences", {})
         room_analysis = state.get("room_analysis", {})
-        count = int(state.get("requested_design_count") or 1)
+        count = int(state.get("requested_design_count") or 3)
+        room_type = _room_type(room_analysis)
+        detected_roles = _roles_from_room_analysis(room_analysis)
 
         if settings.mock_ai or not settings.vertex_project_id:
             logger.info("create_design_strategies_mock")
-            return _mock_strategies(prefs, count, room_analysis)
+            return _mock_strategies(prefs, count, room_type, detected_roles)
 
         # Real AI strategy generation
         logger.info("create_design_strategies_vertex_ai")
@@ -70,21 +123,6 @@ def create_design_strategies_node(db: Session):
             f"Requested design count: {count}\n"
         )
 
-        from pydantic import BaseModel, Field
-
-        class DesignStrategiesResponse(BaseModel):
-            strategies: list[DesignStrategy] = Field(alias="strategies", default_factory=list)
-
-            class Config:
-                populate_by_name = True
-
-            @classmethod
-            def _try_parse(cls, data):
-                """Handle both list and object responses from AI."""
-                if isinstance(data, list):
-                    return cls(strategies=data)
-                return cls.model_validate(data)
-
         try:
             from app.utils.json_utils import extract_json_object
 
@@ -100,7 +138,20 @@ def create_design_strategies_node(db: Session):
                 strategies = [DesignStrategy.model_validate(s) for s in strategy_items]
         except Exception as exc:
             logger.warning("design_strategy_ai_failed_fallback", error=str(exc))
-            return _mock_strategies(prefs, count, room_analysis)
+            return _mock_strategies(prefs, count, room_type, detected_roles)
+
+        # Ensure we have exactly the requested count — fill with smart mocks if AI returned fewer.
+        if len(strategies) < count:
+            logger.info(
+                "design_strategy_fill_missing",
+                ai_returned=len(strategies),
+                requested=count,
+            )
+            fill = _make_mock_strategies(
+                prefs, count - len(strategies), room_type, detected_roles,
+                start_index=len(strategies) + 1,
+            )
+            strategies.extend(fill)
 
         sanitized = [_sanitize_strategy(s, room_analysis, prefs) for s in strategies[:count]]
         return {"design_strategies": [s.model_dump() for s in sanitized]}
@@ -108,57 +159,50 @@ def create_design_strategies_node(db: Session):
     return node
 
 
-def _mock_strategies(prefs: dict, count: int, room_analysis: dict | None = None) -> dict:
-    room_type = _room_type(room_analysis or {})
-    requested = [
-        role for role in prefs.get("requested_furniture_types", []) if role in SUPPORTED_ROLES
-    ]
-    roles = requested or ROOM_DEFAULT_ROLES.get(room_type, DEFAULT_ROLES)
+def _mock_strategies(prefs: dict, count: int, room_type: str, detected_roles: list[str]) -> dict:
+    strategies = _make_mock_strategies(prefs, count, room_type, detected_roles, start_index=1)
+    return {"design_strategies": [s.model_dump() for s in strategies]}
+
+
+def _make_mock_strategies(
+    prefs: dict,
+    count: int,
+    room_type: str,
+    detected_roles: list[str],
+    start_index: int = 1,
+) -> list[DesignStrategy]:
+    """Generate deterministic mock strategies using room type and detected furniture."""
+    base_roles = _default_roles_for_room(room_type, detected_roles)
+    user_roles = [r for r in (prefs.get("requested_furniture_types") or []) if r in SUPPORTED_ROLES]
+    user_style = prefs.get("design_style")
+
     strategies = []
-    for index in range(1, count + 1):
+    for i in range(count):
+        index = start_index + i
+        # Rotate through style palette for diversity.
+        style = user_style if user_style else _STYLE_PALETTE[i % len(_STYLE_PALETTE)]
+
+        # First strategy uses detected/user roles; subsequent ones vary.
+        if i == 0:
+            roles = user_roles if user_roles else base_roles
+        elif i == 1 and detected_roles:
+            # Second strategy focuses on replacement of detected furniture.
+            roles = detected_roles[:4] + [r for r in base_roles if r not in detected_roles][:2]
+        else:
+            # Subsequent strategies pick a different subset.
+            offset = i * 2
+            roles = (base_roles[offset:] + base_roles[:offset])[:4]
+
+        # Sanitize roles against supported catalog.
+        roles = [r for r in roles if r in SUPPORTED_ROLES] or list(base_roles[:3])
+
         strategy = DesignStrategy(
             design_index=index,
-            title=f"{(prefs.get('design_style') or 'Balanced').title()} Design {index}",
-            style=prefs.get("design_style") or "balanced",
-            furniture_roles=roles,
-            notes=prefs.get("extra_preferences"),
+            title=f"{style.replace('_', ' ').title()} Design {index}",
+            style=style,
+            furniture_roles=roles or list(DEFAULT_ROLES),
+            notes=prefs.get("extra_preferences") or f"Auto-generated {style} concept for {room_type}.",
         )
-        strategies.append(strategy.model_dump())
-    return {"design_strategies": strategies}
+        strategies.append(strategy)
 
-
-def _strategy_room_analysis(room_analysis: dict, ignore_existing: bool) -> dict:
-    if not ignore_existing:
-        return room_analysis
-    return {
-        "room_type": _room_type(room_analysis),
-        "architectural_context": room_analysis.get("architectural_context") or {},
-        "available_placement_zones": room_analysis.get("available_placement_zones") or [],
-        "constraints": room_analysis.get("constraints") or {},
-        "lighting": room_analysis.get("lighting"),
-        "color_palette": room_analysis.get("color_palette") or [],
-        "detected_styles": room_analysis.get("detected_styles") or [],
-        "existing_objects_ignored": True,
-    }
-
-
-def _room_type(room_analysis: dict) -> str:
-    architectural_context = room_analysis.get("architectural_context") or {}
-    return architectural_context.get("room_type") or room_analysis.get("room_type") or "living_room"
-
-
-def _sanitize_strategy(
-    strategy: DesignStrategy,
-    room_analysis: dict,
-    prefs: dict,
-) -> DesignStrategy:
-    roles = [role for role in strategy.furniture_roles if role in SUPPORTED_ROLES]
-    if not roles:
-        roles = ROOM_DEFAULT_ROLES.get(_room_type(room_analysis), DEFAULT_ROLES)
-    return DesignStrategy(
-        design_index=strategy.design_index,
-        title=strategy.title,
-        style=strategy.style or prefs.get("design_style") or "balanced",
-        furniture_roles=roles,
-        notes=strategy.notes,
-    )
+    return strategies

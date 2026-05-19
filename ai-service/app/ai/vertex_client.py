@@ -120,6 +120,14 @@ class VertexAIClient:
         try:
             return response_schema.model_validate(extract_json_object(text))
         except ValidationError as exc:
+            import structlog
+            _log = structlog.get_logger("vertex_client")
+            _log.warning(
+                "ai_output_validation_failed",
+                schema=response_schema.__name__,
+                raw_text=text[:2000],
+                error=str(exc)[:500],
+            )
             raise AIOutputValidationError(str(exc)) from exc
 
     @retry(wait=wait_exponential(multiplier=2, min=2, max=30), stop=stop_after_attempt(5))
