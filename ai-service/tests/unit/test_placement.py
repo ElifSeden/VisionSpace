@@ -1,6 +1,7 @@
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
 from PIL import Image
 
 from app.core.config import Settings
@@ -15,6 +16,47 @@ from app.utils.placement import (
     polygon_center,
     validate_placement_polygon,
 )
+
+
+def test_placement_prompt_requires_object_and_normalized_coordinates() -> None:
+    prompt = Path("app/ai/prompts/placement_plan.md").read_text()
+
+    assert 'top-level JSON object MUST be exactly: {"placements": [...]}' in prompt
+    assert "Do NOT return a bare array" in prompt
+    assert 'Use "target_polygon" only' in prompt
+    assert "normalized floats from 0.0 to 1.0" in prompt
+    assert "Never return pixel coordinates" in prompt
+
+
+def test_product_placement_rejects_pixel_coordinates() -> None:
+    from pydantic import ValidationError
+
+    from app.schemas.ai_outputs import ProductPlacement
+
+    with pytest.raises(ValidationError, match="normalized 0.0-1.0"):
+        ProductPlacement.model_validate(
+            {
+                "product_id": "00000000-0000-0000-0000-000000000000",
+                "role": "sofa",
+                "target_polygon": [[18.0, 195.0], [710.0, 195.0], [710.0, 735.0], [18.0, 735.0]],
+                "confidence": 0.8,
+            }
+        )
+
+
+def test_product_placement_accepts_normalized_coordinates() -> None:
+    from app.schemas.ai_outputs import ProductPlacement
+
+    placement = ProductPlacement.model_validate(
+        {
+            "product_id": "00000000-0000-0000-0000-000000000000",
+            "role": "sofa",
+            "target_polygon": [[0.18, 0.55], [0.72, 0.55], [0.72, 0.88], [0.18, 0.88]],
+            "confidence": 0.8,
+        }
+    )
+
+    assert placement.target_polygon[0] == [0.18, 0.55]
 
 
 def test_coordinate_conversion_round_trips_sample_room_image(tmp_path: Path) -> None:
@@ -137,6 +179,8 @@ def test_attach_placements_drops_products_without_polygons() -> None:
                 [0.4, 0.8],
                 [0.2, 0.8],
             ],
+            "scale": 1.0,
+            "rotation": 0.0,
         }
     ]
     assert dropped_products == [

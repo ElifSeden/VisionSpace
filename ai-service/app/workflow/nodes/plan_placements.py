@@ -81,7 +81,8 @@ def _layout_planner_placements(state: DesignWorkflowState, settings) -> dict | N
             "product_id": str(p.get("product_id")),
             "role": p.get("role"),
             "category": p.get("category"),
-            "dimensions": p.get("metadata", {}).get("dimensions", {})
+            "name": p.get("name"),
+            "dimensions": p.get("metadata", {}).get("dimensions", {}),
         }
         products_to_place.append(product_minimal)
         
@@ -91,7 +92,9 @@ def _layout_planner_placements(state: DesignWorkflowState, settings) -> dict | N
         f"{prompt_template}\n\n"
         f"Room analysis:\n{json.dumps(room_analysis, indent=2)}\n\n"
         f"Products to place:\n{json.dumps(products_to_place, indent=2)}\n\n"
-        f"Floor polygon: {json.dumps(floor_polygon)}\n"
+        f"Image dimensions: {image_width}x{image_height} pixels\n"
+        f"Coordinate system required in output: normalized_0_1\n"
+        f"Floor polygon, normalized_0_1: {json.dumps(floor_polygon)}\n"
     )
 
     try:
@@ -99,7 +102,7 @@ def _layout_planner_placements(state: DesignWorkflowState, settings) -> dict | N
             prompt=prompt,
             response_schema=PlacementPlan,
             images=[resolved_room] if resolved_room else None,
-            model_tier="pro" # Gemini 3.1 Pro for spatial reasoning
+            model_tier="pro",  # Gemini 3.1 Pro for spatial reasoning
         )
     except Exception as exc:
         logger.warning("gemini_placement_failed", error=str(exc))
@@ -121,7 +124,7 @@ def _layout_planner_placements(state: DesignWorkflowState, settings) -> dict | N
             "confidence": pp.confidence,
             "notes": pp.notes,
             "scale": pp.scale,
-            "rotation": pp.rotation
+            "rotation": pp.rotation,
         }
         placements.append(placement)
         placement_map[str(pp.product_id)] = placement
@@ -155,10 +158,7 @@ def _layout_planner_placements(state: DesignWorkflowState, settings) -> dict | N
     logger.info(
         "plan_placements_layout_planner",
         job_id=state.get("job_id"),
-        layout_score=plan.layout_score,
-        variation=plan.variation_name,
         placed=len(placed_products),
-        rejected=len(plan.rejected),
         dropped=len(dropped_products),
     )
 

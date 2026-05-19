@@ -186,6 +186,19 @@ class ProductPlacement(BaseModel):
     scale: float | None = 1.0
     rotation: float | None = 0.0
 
+    @field_validator("target_polygon")
+    @classmethod
+    def _validate_normalized_polygon(cls, v: list[list[float]]) -> list[list[float]]:
+        if len(v) != 4:
+            raise ValueError("target_polygon must contain exactly four points")
+        for point in v:
+            if len(point) < 2:
+                raise ValueError("target_polygon points must contain x and y")
+            x, y = float(point[0]), float(point[1])
+            if not 0.0 <= x <= 1.0 or not 0.0 <= y <= 1.0:
+                raise ValueError("target_polygon coordinates must be normalized 0.0-1.0")
+        return v
+
 
 class PlacementPlan(BaseModel):
     placements: list[ProductPlacement]
