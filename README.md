@@ -9,6 +9,9 @@ VisionSpace, mobilya katalog verisini toplayan, zenginleştiren, backend tarafı
 
 Bu dosya geliştiriciler ve sistemi kuracak insanlar içindir. Agent talimatı değildir.
 
+Projenin flutter-apk dosyası: https://drive.google.com/drive/folders/1qfPt-woVqL0-qeMfMBRF-1lSwGDh_ePu
+Backend kısmı sunucuda çalışmaktadır. 
+
 ## 1. Büyük Resim
 
 Tipik çalışma akışı şöyledir:
