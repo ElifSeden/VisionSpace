@@ -14,8 +14,8 @@ class BackendConfig {
 
   static const _prefKey = 'backend_base_url';
   static const _definedUrl = String.fromEnvironment('BACKEND_BASE_URL');
-  static const _androidEmulatorUrl = 'http://192.168.1.14:8000';
-  static const _localhostUrl = 'http://192.168.1.14:8000';
+  static const _androidEmulatorUrl = 'http://213.250.132.20:8000';
+  static const _localhostUrl = 'http://213.250.132.20:8000';
 
   String _baseUrl = _defaultUrl;
 

@@ -196,6 +196,8 @@ The API is self-documenting via **OpenAPI**. When the service is running, visit:
             "external_id": "22DST2550CVPD",
             "name": "Destina Konsol",
             "category": "console_table",
+            "brand": "İstikbal",
+            "store_name": "İstikbal",
             "role": "console_table",
             "source_url": "https://...",
             "price": {"amount": 18370.0, "currency": "TL"},
@@ -207,14 +209,26 @@ The API is self-documenting via **OpenAPI**. When the service is running, visit:
           {
             "region_id": "...",
             "type": "polygon",
-            "polygon": [[260, 430], [480, 430], [500, 550], [240, 550]],
+            "polygon": [[0.31, 0.61], [0.55, 0.61], [0.55, 0.84], [0.31, 0.84]],
             "product_id": "..."
           }
-        ]
+        ],
+        "placement_debug": {
+          "coordinate_system": "normalized_0_1",
+          "image_width": 1280,
+          "image_height": 720,
+          "debug_image_path": "generated/debug/{job_id}_placement.png",
+          "rejected": [{"product_id": "...", "reasons": ["overlaps_existing_furniture"]}]
+        }
       }
     ]
   }
   ```
+
+Placement polygons in API responses are canonical normalized coordinates from `0.0` to `1.0`
+relative to the original uploaded room image: `x = x_pixel / image_width`,
+`y = y_pixel / image_height`. Convert back to pixels only when drawing a composite
+or mapping to Flutter screen coordinates.
 
 #### POST /products/search
 - **Request body**:
@@ -257,6 +271,7 @@ class DesignWorkflowState(TypedDict, total=False):
     candidate_products: dict      # Output of retrieve_candidates
     selected_products: list[dict] # Output of rerank_products
     placement_plan: dict          # Output of plan_placements
+    placement_debug: dict         # Normalized placement validation diagnostics
     generated_images: list[dict]  # Output of generate_images
     final_designs: list[dict]     # Output of persist_result
     current_stage: str
@@ -272,8 +287,8 @@ class DesignWorkflowState(TypedDict, total=False):
 | `create_design_strategies` | **Pro** | Generates creative design concepts based on room + preferences |
 | `retrieve_candidates` | Text + Image embeddings | **Hybrid search**: text vectors via text-embedding-005 + image vectors via multimodalembedding@001. Passes room image for visual similarity matching. |
 | `rerank_products` | — | Deterministic scoring: category, style, color, material fit |
-| `plan_placements` | **Pro** | Spatial reasoning: assigns polygons per product in room image |
-| `generate_images` | — | Stub (gated behind `ENABLE_IMAGE_GENERATION`) |
+| `plan_placements` | — | Validated normalized floor placements. Uses detected floor zones when reliable, otherwise bottom 45-55% fallback, and rejects wall/outside/overlap candidates. |
+| `generate_images` | — | Writes a simple Pillow placeholder overlay composite for each design. Advanced generation remains separate from Sprint 1 placement. |
 | `validate_result` | — | Verifies all products have required placement fields |
 | `persist_result` | — | Saves final designs + selected products to PostgreSQL |
 

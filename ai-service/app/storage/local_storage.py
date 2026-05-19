@@ -1,12 +1,15 @@
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from fastapi import UploadFile
 from PIL import Image
 
 from app.core.config import Settings, get_settings
 from app.core.errors import ImageStorageError
+
+if TYPE_CHECKING:
+    from fastapi import UploadFile
 
 
 ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
@@ -41,7 +44,7 @@ class LocalImageStorage:
     def room_image_exists(self, relative_path: str) -> bool:
         return self.resolve_room_image(relative_path).exists()
 
-    async def save_room_upload(self, file: UploadFile) -> tuple[str, int, int]:
+    async def save_room_upload(self, file: "UploadFile") -> tuple[str, int, int]:
         if file.content_type not in ALLOWED_CONTENT_TYPES:
             raise ImageStorageError("Unsupported image content type")
         ext = Path(file.filename or "").suffix.lower()

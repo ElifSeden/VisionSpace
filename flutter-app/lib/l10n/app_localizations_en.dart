@@ -256,9 +256,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Keep the walls, floor, light, and furniture visible so they can be detected.';
 
   @override
-  String get productSimilarWithAi => 'Find Similar Products with AI';
-
-  @override
   String get productPurchaseOptions => 'Purchase Options';
 
   @override

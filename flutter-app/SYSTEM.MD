@@ -326,7 +326,7 @@ Camera-facing changes need tests where practical and careful manual/platform ver
 - Displays a large room image with normalized product hotspots.
 - Lists clickable product tiles.
 
-Hotspot coordinates are normalized against the displayed image area. Preserve this contract when changing image layout.
+Hotspot coordinates are normalized against the displayed image area. Backend scan results use normalized `clickable_regions[].polygon` values from `0.0` to `1.0`; the Flutter model derives `ProductSpot.left/top` from the polygon center and converts to screen pixels only inside the image `LayoutBuilder`. Preserve this contract when changing image layout.
 
 ### Product Detail
 

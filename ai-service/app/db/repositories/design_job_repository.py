@@ -70,7 +70,17 @@ class DesignJobRepository:
                 summary=design.get("summary"),
                 generated_image_path=design.get("generated_image_path"),
                 room_analysis=room_analysis,
-                placement_plan={"placements": design.get("products", [])},
+                placement_plan={
+                    "placements": [
+                        {
+                            "product_id": product.get("product_id"),
+                            "role": product.get("role"),
+                            "target_polygon": product.get("polygon"),
+                        }
+                        for product in design.get("products", [])
+                    ],
+                    "debug": design.get("placement_debug"),
+                },
                 confidence=design.get("confidence") or {},
             )
             self.db.add(generated)

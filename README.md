@@ -181,6 +181,14 @@ validate_input
 
 Her aşama ayrı node'dur. Bu yapı iş akışının değiştirilebilir kalmasını sağlar. AI çıktıları Pydantic şemalarıyla doğrulanır; backend modelin serbestçe veritabanını değiştirmesine izin vermez.
 
+Yerleşim koordinatları API sınırında normalize edilir: `x = x_pixel / image_width`,
+`y = y_pixel / image_height`. `clickable_regions[].polygon` artık `0.0-1.0`
+aralığında döner; Flutter bu değerleri görüntülenen oda görselinin boyutuna çevirir.
+Backend sadece debug görseli veya basit composite üretirken koordinatları tekrar orijinal
+oda fotoğrafı pikseline çevirir. `DEBUG_PLACEMENT=true` olduğunda backend
+`generated/debug/{job_id}_placement.png` altında floor maskesi, kabul edilen noktalar
+ve reddedilen adayları gösteren bir debug görseli üretir.
+
 ### 4.5 Veritabanı ve Vektör Arama
 
 PostgreSQL kaynak gerçekliktir. Ürünler, ürün görselleri, tasarım job'ları, oluşturulmuş tasarımlar ve seçili ürünler burada tutulur.
@@ -203,6 +211,10 @@ ai-service/data/images
 ```
 
 Container içinde bu dizin `/data/images` olarak mount edilir. API yanıtlarında mutlak path yerine relative path döner. Flutter tarafı bu relative path'i backend URL'sine ekleyerek `/images/...` üzerinden gösterir.
+
+Sprint 1 yerleşim renderer'ı gelişmiş image generation değildir; seçilen ürün görselini
+veya placeholder bloğunu normalize placement polygon'una basan basit bir Pillow composite
+üretir. Çıktı yolu tipik olarak `generated/{job_id}/design_0_composite.png` formatındadır.
 
 ## 5. Flutter Uygulaması
 

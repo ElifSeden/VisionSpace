@@ -34,8 +34,9 @@ class DesignProject {
 
   /// Parse a single design from the ai-service backend response.
   ///
-  /// [imageWidth] and [imageHeight] are used to normalize polygon
-  /// coordinates into 0.0–1.0 hotspot positions.
+  /// Backend polygons are expected to be normalized 0.0-1.0 values. The image
+  /// dimensions are still accepted so older pixel-coordinate responses map
+  /// correctly while deployments roll forward.
   /// [roomImageUrl] is the original uploaded room image URL.
   factory DesignProject.fromBackendJson(
     Map<String, dynamic> json, {
@@ -47,7 +48,7 @@ class DesignProject {
     final rawProducts = json['products'] as List<dynamic>? ?? [];
     final rawRegions = json['clickable_regions'] as List<dynamic>? ?? [];
 
-    // Build a map of product_id → polygon for hotspot positioning
+    // Build a map of product_id -> normalized placement polygon for hotspots.
     final polygonsByProductId = <String, List<List<double>>>{};
     for (final region in rawRegions) {
       final r = region as Map<String, dynamic>;

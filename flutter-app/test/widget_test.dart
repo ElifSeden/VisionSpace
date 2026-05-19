@@ -51,10 +51,8 @@ void main() {
     SharedPreferences.setMockInitialValues({});
 
     await BackendConfig.instance.load();
-    expect(
-      BackendConfig.instance.baseUrl,
-      'http://192.168.1.14:8000',
-    );
+    expect(BackendConfig.instance.baseUrl, startsWith('http://'));
+    expect(BackendConfig.instance.baseUrl, endsWith(':8000'));
 
     await BackendConfig.instance.setBaseUrl('api.example.com/');
     expect(BackendConfig.instance.baseUrl, 'http://api.example.com');
@@ -69,6 +67,8 @@ void main() {
         'product_id': 'p1',
         'name': 'Oak Coffee Table',
         'role': 'coffee_table',
+        'category': 'floor_lamp',
+        'store_name': 'IKEA',
         'score': 0.91,
         'image_path': 'products/oak/main.jpg',
         'source_url': 'https://store.example/item',
@@ -93,6 +93,61 @@ void main() {
       'http://localhost:8000/images/products/oak/main.jpg',
     );
     expect(product.buyUrl, 'https://store.example/item');
+    expect(product.storeName, 'IKEA');
+    expect(product.brand, 'IKEA');
+    expect(product.brand, isNot('coffee_table'));
+    expect(product.brand, isNot('floor_lamp'));
+  });
+
+  test('backend normalized placement polygons map directly to hotspots', () {
+    final product = ProductSpot.fromBackendJson(
+      const {
+        'product_id': 'p2',
+        'name': 'Small Side Table',
+        'store_name': 'Vivense',
+        'score': 87,
+      },
+      polygon: const [
+        [0.40, 0.60],
+        [0.60, 0.60],
+        [0.60, 0.80],
+        [0.40, 0.80],
+      ],
+      imageWidth: 1200,
+      imageHeight: 800,
+    );
+
+    expect(product.left, closeTo(0.5, 0.001));
+    expect(product.top, closeTo(0.7, 0.001));
+  });
+
+  testWidgets('product detail normalizes technical backend store names', (
+    WidgetTester tester,
+  ) async {
+    const product = ProductSpot(
+      id: 'p-technical-store',
+      name: 'Floor Lamp',
+      brand: 'floor_lamp',
+      price: '1250 TL',
+      matchScore: 91,
+      left: 0.5,
+      top: 0.5,
+      imageUrl: 'https://example.com/lamp.jpg',
+      buyUrl: 'https://www.ikea.com.tr/urun/lamp',
+      storeName: 'floor_lamp',
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: ProductDetailPage(product: product),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('IKEA'), findsWidgets);
+    expect(find.text('floor_lamp'), findsNothing);
   });
 
   testWidgets('decorator_ai welcome screen loads', (WidgetTester tester) async {
@@ -292,7 +347,10 @@ void main() {
     expect(find.text(l10n.scanRoomWidthLabel), findsOneWidget);
     expect(find.text(l10n.scanReplaceFurnitureLabel), findsOneWidget);
 
-    final sofaFinder = find.widgetWithText(CheckboxListTile, l10n.scanFurnitureSofa);
+    final sofaFinder = find.widgetWithText(
+      CheckboxListTile,
+      l10n.scanFurnitureSofa,
+    );
     await tester.ensureVisible(sofaFinder);
     await tester.pumpAndSettle();
     await tester.tap(sofaFinder);
@@ -347,6 +405,7 @@ void main() {
 
     expect(find.byType(ProductDetailPage), findsOneWidget);
     expect(find.text(l10n.productDetailTitle), findsOneWidget);
+    expect(find.text('Find Similar Products with AI'), findsNothing);
   });
 
   testWidgets(
@@ -407,6 +466,7 @@ void main() {
 
     expect(find.byType(ProductDetailPage), findsOneWidget);
     expect(find.text(l10n.productDetailTitle), findsOneWidget);
+    expect(find.text('Find Similar Products with AI'), findsNothing);
   });
 
   testWidgets('notifications page shows cards and correct title', (

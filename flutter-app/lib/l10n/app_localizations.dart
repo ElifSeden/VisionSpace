@@ -518,12 +518,6 @@ abstract class AppLocalizations {
   /// **'Keep the walls, floor, light, and furniture visible so they can be detected.'**
   String get cameraOverlayHint;
 
-  /// No description provided for @productSimilarWithAi.
-  ///
-  /// In en, this message translates to:
-  /// **'Find Similar Products with AI'**
-  String get productSimilarWithAi;
-
   /// No description provided for @productPurchaseOptions.
   ///
   /// In en, this message translates to:

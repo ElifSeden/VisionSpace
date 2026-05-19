@@ -13,8 +13,8 @@ class DesignWorkflowState(TypedDict, total=False):
     candidate_products: dict
     selected_products: list[dict]
     placement_plan: dict
+    placement_debug: dict
     generated_images: list[dict]
     final_designs: list[dict]
     current_stage: str
     errors: list[dict]
-

@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     generated_image_dir: Path = Field(default=Path("/data/images/generated"))
 
     max_upload_mb: int = 15
+    debug_placement: bool = False
     enable_image_generation: bool = False
     default_design_count: int = 3
     max_candidates_per_item: int = 50

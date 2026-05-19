@@ -254,9 +254,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Duvar, zemin, ışık ve mobilyaları algılamak için alanı görünür tut.';
 
   @override
-  String get productSimilarWithAi => 'Benzer Ürünleri AI ile Bul';
-
-  @override
   String get productPurchaseOptions => 'Satın Alma Seçenekleri';
 
   @override

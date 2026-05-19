@@ -2,11 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/widgets/primary_button.dart';
 import '../../core/widgets/remote_image.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/product_spot.dart';
 import '../../models/store_offer.dart';
+
+String normalizeStoreName({
+  required String storeName,
+  required String brand,
+  required String buyUrl,
+}) {
+  final raw = storeName.trim().isNotEmpty ? storeName.trim() : brand.trim();
+  final lowerRaw = raw.toLowerCase();
+  final lowerUrl = buyUrl.toLowerCase();
+
+  if (lowerRaw.contains('ikea') || lowerUrl.contains('ikea')) return 'IKEA';
+  if (lowerRaw.contains('vivense') || lowerUrl.contains('vivense')) {
+    return 'Vivense';
+  }
+  if (lowerRaw.contains('istikbal') || lowerUrl.contains('istikbal')) {
+    return 'İstikbal';
+  }
+
+  if (raw.isNotEmpty && !raw.contains('_') && !raw.contains('/')) {
+    return raw;
+  }
+  return 'Mağaza';
+}
 
 class ProductDetailPage extends StatefulWidget {
   const ProductDetailPage({
@@ -33,13 +55,19 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     _isFavorite = widget.isFavorite;
   }
 
+  String get _storeDisplayName {
+    return normalizeStoreName(
+      storeName: widget.product.storeName,
+      brand: widget.product.brand,
+      buyUrl: widget.product.buyUrl,
+    );
+  }
+
   List<StoreOffer> get _offers {
     if (widget.product.buyUrl.isNotEmpty) {
       return [
         StoreOffer(
-          storeName: widget.product.storeName.isNotEmpty
-              ? widget.product.storeName
-              : widget.product.brand,
+          storeName: _storeDisplayName,
           price: widget.product.price,
           url: widget.product.buyUrl,
           buttonColor: AppColors.sage,
@@ -163,25 +191,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
-                Align(
-                  alignment: Alignment.center,
-                  child: SizedBox(
-                    width: 246,
-                    child: PrimaryButton(
-                      label: l10n.productSimilarWithAi,
-                      icon: Icons.auto_awesome_rounded,
-                      isOutlined: true,
-                      onPressed: () {},
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 24),
                 Text(
                   widget.product.buyUrl.isNotEmpty
-                      ? (widget.product.storeName.isNotEmpty
-                            ? widget.product.storeName
-                            : l10n.productPurchaseOptions)
+                      ? _storeDisplayName
                       : l10n.productPurchaseOptions,
                   style: textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w900,

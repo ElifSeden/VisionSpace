@@ -43,8 +43,8 @@ class ProductSpot {
   /// [polygon] is an optional list of coordinate pairs from the
   /// `clickable_regions` response. The center of the polygon is used
   /// to derive normalized [left] and [top] hotspot positions.
-  /// [imageWidth] and [imageHeight] are the room image dimensions
-  /// used for coordinate normalization.
+  /// New backend responses use normalized 0.0-1.0 polygons directly. The
+  /// image dimensions are kept for older pixel-polygon responses.
   factory ProductSpot.fromBackendJson(
     Map<String, dynamic> json, {
     List<List<double>>? polygon,
@@ -63,22 +63,38 @@ class ProductSpot {
     final safeImageHeight = imageHeight <= 0 ? 1 : imageHeight;
     if (polygon != null && polygon.isNotEmpty) {
       double sumX = 0, sumY = 0;
+      double maxCoordinate = 0;
       for (final point in polygon) {
         sumX += point[0];
         sumY += point[1];
+        if (point[0].abs() > maxCoordinate) maxCoordinate = point[0].abs();
+        if (point[1].abs() > maxCoordinate) maxCoordinate = point[1].abs();
       }
-      hotspotLeft = (sumX / polygon.length) / safeImageWidth;
-      hotspotTop = (sumY / polygon.length) / safeImageHeight;
+      final centerX = sumX / polygon.length;
+      final centerY = sumY / polygon.length;
+      if (maxCoordinate <= 1.0) {
+        hotspotLeft = centerX;
+        hotspotTop = centerY;
+      } else {
+        // Legacy backend responses used original image pixels.
+        hotspotLeft = centerX / safeImageWidth;
+        hotspotTop = centerY / safeImageHeight;
+      }
     }
 
     final rawScore = (json['score'] as num?)?.toDouble() ?? 0.0;
     final normalizedScore = rawScore <= 1 ? rawScore * 100 : rawScore;
     final imagePath = json['image_path'] as String? ?? '';
+    final storeName =
+        json['store_name'] as String? ??
+        json['storeName'] as String? ??
+        json['source_name'] as String? ??
+        '';
 
     return ProductSpot(
       id: json['product_id'] as String? ?? json['external_id'] as String? ?? '',
       name: json['name'] as String? ?? '',
-      brand: json['role'] as String? ?? json['category'] as String? ?? '',
+      brand: json['brand'] as String? ?? storeName,
       price: priceStr,
       matchScore: normalizedScore.round().clamp(0, 100).toInt(),
       left: hotspotLeft.clamp(0.0, 1.0),
@@ -87,7 +103,7 @@ class ProductSpot {
           ? imageUrlBuilder(imagePath)
           : imagePath,
       buyUrl: json['source_url'] as String? ?? '',
-      storeName: '',
+      storeName: storeName,
     );
   }
 
