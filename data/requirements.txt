@@ -1,0 +1,8 @@
+pydantic
+python-dotenv
+numpy
+tqdm
+scrapy
+Pillow
+google-auth
+requests

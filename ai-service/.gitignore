@@ -1,5 +1,12 @@
 .env
-__pycache__
-.scrapy
-output/
-output
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+data/images/*
+!data/images/.gitkeep
+!data/images/products/.gitkeep
+!data/images/rooms/.gitkeep
+!data/images/generated/.gitkeep

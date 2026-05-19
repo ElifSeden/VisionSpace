@@ -1,0 +1,4 @@
+QDRANT_URL=http://localhost:6333
+QDRANT_COLLECTION=collection-name
+PROJECT_ID=project-name
+MODEL_ID=gemini-3-flash-preview

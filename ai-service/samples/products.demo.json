@@ -1,0 +1,71 @@
+[
+  {
+    "external_id": "demo_coffee_table_001",
+    "source": "demo",
+    "source_url": "https://example.com/demo-coffee-table",
+    "name": "Demo Oak Coffee Table",
+    "description": "A warm oak coffee table for compact living rooms.",
+    "category": "coffee_table",
+    "price": {
+      "amount": 3499,
+      "currency": "TRY"
+    },
+    "dimensions": {
+      "width_cm": 110,
+      "depth_cm": 60,
+      "height_cm": 42
+    },
+    "material": ["wood"],
+    "colors": ["oak", "beige"],
+    "styles": ["scandinavian"],
+    "temperature": "warm",
+    "room_types": ["living_room"],
+    "images": []
+  },
+  {
+    "external_id": "demo_carpet_001",
+    "source": "demo",
+    "source_url": "https://example.com/demo-carpet",
+    "name": "Demo Beige Living Room Carpet",
+    "description": "A neutral beige carpet suitable for a warm minimal layout.",
+    "category": "carpet",
+    "price": {
+      "amount": 2199,
+      "currency": "TRY"
+    },
+    "dimensions": {
+      "width_cm": 200,
+      "depth_cm": 140,
+      "height_cm": 2
+    },
+    "material": ["fabric"],
+    "colors": ["beige"],
+    "styles": ["scandinavian"],
+    "temperature": "warm",
+    "room_types": ["living_room"],
+    "images": []
+  },
+  {
+    "external_id": "demo_floor_lamp_001",
+    "source": "demo",
+    "source_url": "https://example.com/demo-floor-lamp",
+    "name": "Demo Warm Floor Lamp",
+    "description": "A minimal floor lamp with warm lighting.",
+    "category": "floor_lamp",
+    "price": {
+      "amount": 1299,
+      "currency": "TRY"
+    },
+    "dimensions": {
+      "width_cm": 35,
+      "depth_cm": 35,
+      "height_cm": 165
+    },
+    "material": ["metal", "fabric"],
+    "colors": ["beige", "black"],
+    "styles": ["scandinavian"],
+    "temperature": "warm",
+    "room_types": ["living_room"],
+    "images": []
+  }
+]

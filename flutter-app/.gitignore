@@ -46,5 +46,5 @@ app.*.map.json
 
 
 .env
-
+TEMP.md
 flutter_*.png
