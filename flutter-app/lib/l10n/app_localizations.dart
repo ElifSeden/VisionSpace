@@ -992,11 +992,11 @@ abstract class AppLocalizations {
   /// **'Removed from Favorites'**
   String get removedFromFavorites;
 
-  /// No description provided for @welcomeToVisionSpace.
+  /// No description provided for @welcomeToDecoratorAI.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to VisionSpace'**
-  String get welcomeToVisionSpace;
+  /// **'Welcome to Decorator AI'**
+  String get welcomeToDecoratorAI;
 
   /// No description provided for @newAiDesignReady.
   ///

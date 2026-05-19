@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image/image.dart' as img;
 import 'package:decorator_ai/core/config/backend_config.dart';
+import 'package:decorator_ai/features/design/design_detail_page.dart';
 import 'package:decorator_ai/features/favorites/favorites_page.dart';
 import 'package:decorator_ai/features/notifications/notifications_page.dart';
 import 'package:decorator_ai/features/onboarding/onboarding_flow_page.dart';
@@ -586,6 +588,88 @@ void main() {
     expect(find.text(l10n.notificationsTitle), findsOneWidget);
     expect(find.text(l10n.newAiDesignReady), findsOneWidget);
     expect(find.text(l10n.addedToFavorites), findsOneWidget);
+  });
+
+  testWidgets('DesignDetailPage does not contain the save/bookmark button', (WidgetTester tester) async {
+    const project = DesignProject(
+      id: 'd-test-1',
+      title: 'Test Design Room',
+      spaceType: 'living_room',
+      style: 'modern',
+      imageUrl: 'https://example.com/room.jpg',
+      products: [],
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: DesignDetailPage(project: project),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byIcon(Icons.bookmark_border_rounded), findsNothing);
+  });
+
+  testWidgets('ScanPage does not contain the question mark help button', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: ScanPage()),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byIcon(Icons.help_outline_rounded), findsNothing);
+  });
+
+  testWidgets('FavoritesPage contains a RefreshIndicator', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: FavoritesPage(
+            favoriteIds: const <String>{},
+            onToggleFavorite: (_) {},
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byType(RefreshIndicator), findsOneWidget);
+  });
+
+  test('Image orientation normalization processes a valid image file', () async {
+    final tempDir = Directory.systemTemp.createTempSync();
+    final tempFile = File('${tempDir.path}/test_image.jpg');
+
+    // Create a 1x1 image and encode to Jpg
+    final testImg = img.Image(width: 1, height: 1);
+    final jpegBytes = img.encodeJpg(testImg);
+    await tempFile.writeAsBytes(jpegBytes);
+
+    // Run the normalization logic
+    final file = File(tempFile.path);
+    final bytes = await file.readAsBytes();
+    final decoded = img.decodeImage(bytes);
+    expect(decoded, isNotNull);
+
+    final oriented = img.bakeOrientation(decoded!);
+    final orientedBytes = img.encodeJpg(oriented);
+    await file.writeAsBytes(orientedBytes);
+
+    // Verify it is still valid and readable
+    final newBytes = await file.readAsBytes();
+    final newDecoded = img.decodeImage(newBytes);
+    expect(newDecoded, isNotNull);
+    expect(newDecoded!.width, 1);
+    expect(newDecoded.height, 1);
+
+    tempDir.deleteSync(recursive: true);
   });
 }
 

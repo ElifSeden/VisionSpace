@@ -327,8 +327,8 @@ String _titleFor(AppLocalizations l10n, AppNotification notification) {
       return l10n.addedToFavorites;
     case 'removedFromFavorites':
       return l10n.removedFromFavorites;
-    case 'welcomeToVisionSpace':
-      return l10n.welcomeToVisionSpace;
+    case 'welcomeToDecoratorAI':
+      return l10n.welcomeToDecoratorAI;
     case 'newAiDesignReady':
       return l10n.newAiDesignReady;
     case 'designSaved':
@@ -363,7 +363,7 @@ IconData _iconFor(String titleKey) {
     case 'addedToFavorites':
     case 'removedFromFavorites':
       return Icons.favorite_rounded;
-    case 'welcomeToVisionSpace':
+    case 'welcomeToDecoratorAI':
       return Icons.waving_hand_rounded;
     case 'newAiDesignReady':
       return Icons.auto_awesome_rounded;

@@ -511,7 +511,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removedFromFavorites => 'Removed from Favorites';
 
   @override
-  String get welcomeToVisionSpace => 'Welcome to VisionSpace';
+  String get welcomeToDecoratorAI => 'Welcome to Decorator AI';
 
   @override
   String get newAiDesignReady => 'New AI Design Ready';

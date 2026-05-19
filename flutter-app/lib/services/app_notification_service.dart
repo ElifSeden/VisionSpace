@@ -46,7 +46,7 @@ class AppNotificationService {
 
   Future<void> addWelcome() {
     return _add(
-      titleKey: 'welcomeToVisionSpace',
+      titleKey: 'welcomeToDecoratorAI',
       descriptionKey: 'welcomeNotificationDescription',
       type: 'updates',
     );

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -34,6 +35,23 @@ class ScanProcessingPage extends StatefulWidget {
 class _ScanProcessingPageState extends State<ScanProcessingPage>
     with SingleTickerProviderStateMixin {
   final DecoratorAiApi _api = BackendDecoratorAiApi();
+
+  Future<String> _normalizeImageOrientation(String path) async {
+    try {
+      final file = File(path);
+      final bytes = await file.readAsBytes();
+      final image = img.decodeImage(bytes);
+      if (image == null) return path;
+
+      final orientedImage = img.bakeOrientation(image);
+      final orientedBytes = img.encodeJpg(orientedImage, quality: 90);
+      await file.writeAsBytes(orientedBytes);
+      return path;
+    } catch (e) {
+      debugPrint('Error normalizing image orientation: $e');
+      return path;
+    }
+  }
 
   late final AnimationController _pulseController;
   String _currentStageKey = 'scanStageAnalyzing';
@@ -76,8 +94,9 @@ class _ScanProcessingPageState extends State<ScanProcessingPage>
     );
 
     try {
+      final processedPath = await _normalizeImageOrientation(widget.imagePath);
       final project = await _api.submitAndPollScan(
-        imageFile: File(widget.imagePath),
+        imageFile: File(processedPath),
         options: widget.options,
         onProgress: _onProgress,
       );

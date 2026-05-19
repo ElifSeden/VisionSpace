@@ -509,7 +509,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get removedFromFavorites => 'Favorilerden Çıkarıldı';
 
   @override
-  String get welcomeToVisionSpace => 'VisionSpace’e Hoş Geldin';
+  String get welcomeToDecoratorAI => 'Decorator AI\'a Hoş Geldin';
 
   @override
   String get newAiDesignReady => 'Yeni AI Tasarım Hazır';

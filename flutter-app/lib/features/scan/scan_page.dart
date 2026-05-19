@@ -230,27 +230,6 @@ class _ScanPageState extends State<ScanPage> {
                   ],
                 ),
               ),
-              const SizedBox(width: 14),
-              InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => _showTips(context, l10n),
-                child: Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.ink.withValues(alpha: 0.10),
-                        blurRadius: 14,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(Icons.help_outline_rounded, size: 22),
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 28),

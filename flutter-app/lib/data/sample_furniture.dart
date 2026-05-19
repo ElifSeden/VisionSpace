@@ -35,17 +35,6 @@ const sampleFurniture = <FurnitureItem>[
         'https://images.unsplash.com/photo-1550581190-9c1c48d21d6c?auto=format&fit=crop&w=900&q=80',
   ),
   FurnitureItem(
-    id: 'clay-loveseat',
-    title: 'Clay Loveseat',
-    description: 'Compact loveseat with warm terracotta tone.',
-    category: 'Sofa',
-    material: 'Boucle',
-    style: 'Contemporary',
-    price: '\$760',
-    imageUrl:
-        'https://images.unsplash.com/photo-1493663284031-b7e3aaa4cab7?auto=format&fit=crop&w=900&q=80',
-  ),
-  FurnitureItem(
     id: 'wooden-chair',
     title: 'Wooden Chair',
     description: 'Warm natural chair with a compact dining profile.',
@@ -88,17 +77,6 @@ const sampleFurniture = <FurnitureItem>[
     price: '\$390',
     imageUrl:
         'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=900&q=80',
-  ),
-  FurnitureItem(
-    id: 'marble-coffee-table',
-    title: 'Marble Coffee Table',
-    description: 'Low sculptural table with a polished stone surface.',
-    category: 'Table',
-    material: 'Marble',
-    style: 'Luxury',
-    price: '\$420',
-    imageUrl:
-        'https://images.unsplash.com/photo-1532372320978-9d6e67a5ef0c?auto=format&fit=crop&w=900&q=80',
   ),
   FurnitureItem(
     id: 'round-side-table',
@@ -187,17 +165,6 @@ const sampleFurniture = <FurnitureItem>[
     price: '\$260',
     imageUrl:
         'https://images.unsplash.com/photo-1594620302200-9a762244a156?auto=format&fit=crop&w=900&q=80',
-  ),
-  FurnitureItem(
-    id: 'woven-rug',
-    title: 'Woven Area Rug',
-    description: 'Neutral rug that grounds the seating area.',
-    category: 'Decor',
-    material: 'Wool',
-    style: 'Textured',
-    price: '\$310',
-    imageUrl:
-        'https://images.unsplash.com/photo-1600166898405-da9535204843?auto=format&fit=crop&w=900&q=80',
   ),
   FurnitureItem(
     id: 'ceramic-vase',

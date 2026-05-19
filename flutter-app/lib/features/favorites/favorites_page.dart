@@ -40,6 +40,16 @@ class _FavoritesPageState extends State<FavoritesPage> {
   String _selectedFilter = 'All';
   _FavoritesSection _selectedSection = _FavoritesSection.furniture;
 
+  Future<void> _handleRefresh() async {
+    setState(() {
+      _generatedDesigns =
+          _generatedDesignsRepository.fetchGeneratedDesigns();
+    });
+    try {
+      await _generatedDesigns;
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -50,12 +60,15 @@ class _FavoritesPageState extends State<FavoritesPage> {
     }).toList();
 
     return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 116),
-        children: [
-          Text(
-            l10n.myFavorites,
-            style: const TextStyle(
+      child: RefreshIndicator(
+        onRefresh: _handleRefresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 116),
+          children: [
+            Text(
+              l10n.myFavorites,
+              style: const TextStyle(
               color: AppColors.ink,
               fontSize: 28,
               fontWeight: FontWeight.w900,
@@ -104,8 +117,9 @@ class _FavoritesPageState extends State<FavoritesPage> {
             ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _FavoritesSectionTabs extends StatelessWidget {
