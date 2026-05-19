@@ -50,9 +50,9 @@ class Settings(BaseSettings):
     # Furniture scale range — lower y (far) gets min_scale, higher y (close)
     # gets max_scale.  The linear formula is:
     #   scale = min + (normalized_y × (max − min))
-    perspective_min_scale: float = 0.35
-    perspective_max_scale: float = 1.2
-    default_furniture_width: int = 200  # pixels at scale=1.0
+    perspective_min_scale: float = 0.5
+    perspective_max_scale: float = 1.5
+    default_furniture_width: int = 400  # pixels at scale=1.0
 
     # Shadow rendering
     shadow_opacity: float = 0.45

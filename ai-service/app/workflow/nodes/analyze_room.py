@@ -86,7 +86,7 @@ def analyze_room_node(db: Session):
                 prompt,
                 RoomAnalysisResult,
                 images=images or None,
-                model_tier="pro",
+                model_tier="flash",
             )
         except Exception as exc:
             # If AI output cannot be parsed even after retries, return a minimal

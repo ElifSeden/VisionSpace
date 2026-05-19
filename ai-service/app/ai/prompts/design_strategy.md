@@ -35,7 +35,7 @@ dining_table, dining_chair, wardrobe, dresser, nightstand, console_table, mirror
    - At least one strategy should focus on replacing existing furniture
    - At least one strategy should focus on adding complementary pieces
 
-4. IMPORTANT: Include 3-5 furniture_roles per strategy. Not too few (empty room), not too many (cluttered).
+4. IMPORTANT: Include 4-8 furniture_roles per strategy. Not too few (empty room), but be generous with the design additions.
 
 5. Match furniture_roles to the room type:
    - Bedroom → bed, nightstand, wardrobe, dresser, mirror, floor_lamp

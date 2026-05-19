@@ -128,7 +128,7 @@ def create_design_strategies_node(db: Session):
 
             parts = [{"text": prompt}]
             text = client._stream_generate(
-                parts, temperature=0.4, response_mime_type="application/json", model_tier="pro"
+                parts, temperature=0.4, response_mime_type="application/json", model_tier="flash"
             )
             parsed = extract_json_object(text)
             if isinstance(parsed, list):

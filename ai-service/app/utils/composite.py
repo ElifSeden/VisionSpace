@@ -15,6 +15,7 @@ from pathlib import Path
 
 import structlog
 from PIL import Image, ImageDraw, ImageFont
+import numpy as np
 import requests
 
 from app.core.config import get_settings
@@ -271,22 +272,16 @@ def _prepare_product_cutout(image: Image.Image) -> Image.Image:
 
     background = _background_color_from_corners(rgba)
     if background is None:
-        return rgba.copy()
+        background = (255, 255, 255)
 
-    pixels = rgba.load()
-    width, height = rgba.size
-    for y in range(height):
-        for x in range(width):
-            red, green, blue, current_alpha = pixels[x, y]
-            if max(
-                abs(red - background[0]),
-                abs(green - background[1]),
-                abs(blue - background[2]),
-            ) <= 24:
-                pixels[x, y] = (red, green, blue, 0)
-            else:
-                pixels[x, y] = (red, green, blue, current_alpha)
-    return rgba
+    arr = np.array(rgba)
+    # Vectorized background removal for speed
+    diff = np.abs(arr[:, :, :3] - np.array(background))
+    # Using a higher tolerance since users reported white background remaining
+    mask = np.max(diff, axis=-1) <= 35
+    
+    arr[mask, 3] = 0
+    return Image.fromarray(arr, 'RGBA')
 
 
 def _background_color_from_corners(image: Image.Image) -> tuple[int, int, int] | None:
