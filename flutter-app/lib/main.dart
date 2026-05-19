@@ -9,6 +9,7 @@ import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
 import 'features/welcome/welcome_page.dart';
 import 'l10n/app_localizations.dart';
+import 'navigation/app_navigator.dart';
 import 'navigation/app_shell.dart';
 import 'services/decorator_ai_api.dart';
 import 'services/notification_service.dart';
@@ -81,6 +82,7 @@ class _DecoratorAiAppState extends State<DecoratorAiApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: appNavigatorKey,
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       localizationsDelegates: const [
         AppLocalizations.delegate,

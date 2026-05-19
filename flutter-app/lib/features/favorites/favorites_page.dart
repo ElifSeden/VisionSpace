@@ -4,19 +4,26 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/remote_image.dart';
 import '../../data/sample_furniture.dart';
 import '../../l10n/app_localizations.dart';
+import '../../models/design_project.dart';
 import '../../models/furniture_item.dart';
 import '../../models/product_spot.dart';
+import '../../services/generated_designs_repository.dart';
+import '../design/design_detail_page.dart';
 import '../product/product_detail_page.dart';
+
+enum _FavoritesSection { furniture, designs }
 
 class FavoritesPage extends StatefulWidget {
   const FavoritesPage({
     required this.favoriteIds,
     required this.onToggleFavorite,
+    this.generatedDesignsRepository,
     super.key,
   });
 
   final Set<String> favoriteIds;
   final ValueChanged<String> onToggleFavorite;
+  final GeneratedDesignsRepository? generatedDesignsRepository;
 
   @override
   State<FavoritesPage> createState() => _FavoritesPageState();
@@ -24,7 +31,14 @@ class FavoritesPage extends StatefulWidget {
 
 class _FavoritesPageState extends State<FavoritesPage> {
   static const _filters = ['All', 'Chair', 'Sofa', 'Table', 'Decor'];
+
+  late final GeneratedDesignsRepository _generatedDesignsRepository =
+      widget.generatedDesignsRepository ?? GeneratedDesignsRepository();
+  late Future<List<DesignProject>> _generatedDesigns =
+      _generatedDesignsRepository.fetchGeneratedDesigns();
+
   String _selectedFilter = 'All';
+  _FavoritesSection _selectedSection = _FavoritesSection.furniture;
 
   @override
   Widget build(BuildContext context) {
@@ -57,39 +71,133 @@ class _FavoritesPageState extends State<FavoritesPage> {
             ),
           ),
           const SizedBox(height: 18),
-          _FilterChips(
+          _FavoritesSectionTabs(
             l10n: l10n,
-            filters: _filters,
-            selectedFilter: _selectedFilter,
-            onChanged: (filter) => setState(() => _selectedFilter = filter),
+            selectedSection: _selectedSection,
+            onChanged: (section) => setState(() => _selectedSection = section),
           ),
           const SizedBox(height: 18),
-          if (favorites.isEmpty)
-            _EmptyFavoritesCard(l10n: l10n)
-          else
-            LayoutBuilder(
-              builder: (context, constraints) {
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: favorites.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: constraints.maxWidth > 560 ? 3 : 2,
-                    crossAxisSpacing: 14,
-                    mainAxisSpacing: 14,
-                    childAspectRatio: constraints.maxWidth > 380 ? 0.68 : 0.62,
-                  ),
-                  itemBuilder: (context, index) {
-                    final item = favorites[index];
-                    return _FavoriteCard(
-                      item: item,
-                      onToggleFavorite: () => widget.onToggleFavorite(item.id),
-                    );
-                  },
-                );
+          if (_selectedSection == _FavoritesSection.furniture) ...[
+            _FilterChips(
+              l10n: l10n,
+              filters: _filters,
+              selectedFilter: _selectedFilter,
+              onChanged: (filter) => setState(() => _selectedFilter = filter),
+            ),
+            const SizedBox(height: 18),
+            if (favorites.isEmpty)
+              _EmptyFavoritesCard(l10n: l10n)
+            else
+              _FavoriteGrid(
+                favorites: favorites,
+                onToggleFavorite: widget.onToggleFavorite,
+              ),
+          ] else
+            _GeneratedDesignsList(
+              future: _generatedDesigns,
+              onRefresh: () {
+                setState(() {
+                  _generatedDesigns = _generatedDesignsRepository
+                      .fetchGeneratedDesigns();
+                });
               },
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _FavoritesSectionTabs extends StatelessWidget {
+  const _FavoritesSectionTabs({
+    required this.l10n,
+    required this.selectedSection,
+    required this.onChanged,
+  });
+
+  final AppLocalizations l10n;
+  final _FavoritesSection selectedSection;
+  final ValueChanged<_FavoritesSection> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          _FavoritesSectionButton(
+            label: l10n.favoritesFurnitureTab,
+            icon: Icons.favorite_rounded,
+            selected: selectedSection == _FavoritesSection.furniture,
+            onTap: () => onChanged(_FavoritesSection.furniture),
+          ),
+          _FavoritesSectionButton(
+            label: l10n.favoritesDesignsTab,
+            icon: Icons.auto_awesome_rounded,
+            selected: selectedSection == _FavoritesSection.designs,
+            onTap: () => onChanged(_FavoritesSection.designs),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FavoritesSectionButton extends StatelessWidget {
+  const _FavoritesSectionButton({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          height: 44,
+          decoration: BoxDecoration(
+            color: selected ? AppColors.sage : Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: selected ? Colors.white : AppColors.muted,
+              ),
+              const SizedBox(width: 7),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: selected ? Colors.white : AppColors.ink,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -137,6 +245,200 @@ class _FilterChips extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _FavoriteGrid extends StatelessWidget {
+  const _FavoriteGrid({
+    required this.favorites,
+    required this.onToggleFavorite,
+  });
+
+  final List<FurnitureItem> favorites;
+  final ValueChanged<String> onToggleFavorite;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: favorites.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: constraints.maxWidth > 560 ? 3 : 2,
+            crossAxisSpacing: 14,
+            mainAxisSpacing: 14,
+            childAspectRatio: constraints.maxWidth > 380 ? 0.68 : 0.62,
+          ),
+          itemBuilder: (context, index) {
+            final item = favorites[index];
+            return _FavoriteCard(
+              item: item,
+              onToggleFavorite: () => onToggleFavorite(item.id),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _GeneratedDesignsList extends StatelessWidget {
+  const _GeneratedDesignsList({required this.future, required this.onRefresh});
+
+  final Future<List<DesignProject>> future;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return FutureBuilder<List<DesignProject>>(
+      future: future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 42),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final designs = snapshot.data ?? const <DesignProject>[];
+        if (designs.isEmpty) {
+          return _EmptyGeneratedDesignsCard(l10n: l10n, onRefresh: onRefresh);
+        }
+
+        return Column(
+          children: designs.map((project) {
+            return _GeneratedDesignCard(project: project);
+          }).toList(),
+        );
+      },
+    );
+  }
+}
+
+class _GeneratedDesignCard extends StatelessWidget {
+  const _GeneratedDesignCard({required this.project});
+
+  final DesignProject project;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => DesignDetailPage(project: project),
+            ),
+          );
+        },
+        child: Container(
+          height: 210,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.ink.withValues(alpha: 0.07),
+                blurRadius: 22,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              RemoteImage(url: project.imageUrl),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      AppColors.ink.withValues(alpha: 0.84),
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 14,
+                left: 14,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface.withValues(alpha: 0.92),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    l10n.generatedDesignBadge,
+                    style: const TextStyle(
+                      color: AppColors.ink,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 18,
+                right: 18,
+                bottom: 18,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            project.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 21,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 7),
+                          Text(
+                            l10n.designProductCount(project.products.length),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: const BoxDecoration(
+                        color: AppColors.surface,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.arrow_forward_rounded),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -296,6 +598,49 @@ class _EmptyFavoritesCard extends StatelessWidget {
               l10n.noFavoritesMessage,
               style: const TextStyle(color: AppColors.muted, height: 1.4),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyGeneratedDesignsCard extends StatelessWidget {
+  const _EmptyGeneratedDesignsCard({
+    required this.l10n,
+    required this.onRefresh,
+  });
+
+  final AppLocalizations l10n;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            backgroundColor: AppColors.cream,
+            child: Icon(Icons.auto_awesome_rounded, color: AppColors.sage),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              l10n.noGeneratedDesignsMessage,
+              style: const TextStyle(color: AppColors.muted, height: 1.4),
+            ),
+          ),
+          IconButton(
+            onPressed: onRefresh,
+            icon: const Icon(Icons.refresh_rounded),
+            color: AppColors.ink,
+            tooltip: l10n.refreshGeneratedDesigns,
           ),
         ],
       ),

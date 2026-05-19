@@ -7,6 +7,7 @@ class AppNotification {
     required this.createdAt,
     required this.isRead,
     this.itemName,
+    this.designId,
   });
 
   final String id;
@@ -16,6 +17,7 @@ class AppNotification {
   final DateTime createdAt;
   final bool isRead;
   final String? itemName;
+  final String? designId;
 
   AppNotification copyWith({bool? isRead}) {
     return AppNotification(
@@ -26,6 +28,7 @@ class AppNotification {
       createdAt: createdAt,
       isRead: isRead ?? this.isRead,
       itemName: itemName,
+      designId: designId,
     );
   }
 
@@ -38,6 +41,7 @@ class AppNotification {
       'createdAt': createdAt.toIso8601String(),
       'isRead': isRead,
       'itemName': itemName,
+      'designId': designId,
     };
   }
 
@@ -52,6 +56,7 @@ class AppNotification {
           DateTime.now(),
       isRead: json['isRead'] as bool? ?? false,
       itemName: json['itemName'] as String?,
+      designId: json['designId'] as String?,
     );
   }
 }

@@ -52,11 +52,12 @@ class AppNotificationService {
     );
   }
 
-  Future<void> addAiDesignReady() {
+  Future<void> addAiDesignReady({String? designId}) {
     return _add(
       titleKey: 'newAiDesignReady',
       descriptionKey: 'newAiDesignReadyDescription',
       type: 'updates',
+      designId: designId,
     );
   }
 
@@ -90,6 +91,7 @@ class AppNotificationService {
     required String descriptionKey,
     required String type,
     String? itemName,
+    String? designId,
   }) async {
     final notifications = await loadNotifications();
     notifications.insert(
@@ -102,6 +104,7 @@ class AppNotificationService {
         createdAt: DateTime.now(),
         isRead: false,
         itemName: itemName,
+        designId: designId,
       ),
     );
     await _save(notifications.take(50).toList());

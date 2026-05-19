@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../navigation/app_navigator.dart';
+
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
@@ -49,7 +51,10 @@ class NotificationService {
       macOS: initializationSettingsDarwin,
     );
 
-    await _localNotifications.initialize(settings: initializationSettings);
+    await _localNotifications.initialize(
+      settings: initializationSettings,
+      onDidReceiveNotificationResponse: _handleNotificationResponse,
+    );
 
     if (!enableRemoteNotifications) return;
 
@@ -71,6 +76,12 @@ class NotificationService {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       _showRemoteNotification(message);
     });
+
+    FirebaseMessaging.onMessageOpenedApp.listen(_handleRemoteMessageTap);
+    final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+    if (initialMessage != null) {
+      _handleRemoteMessageTap(initialMessage);
+    }
   }
 
   Future<bool> get isLocalNotificationsEnabled async {
@@ -152,6 +163,18 @@ class NotificationService {
     await _localNotifications.cancelAll();
   }
 
+  void _handleNotificationResponse(NotificationResponse response) {
+    final designId = _designIdFromPayload(response.payload);
+    if (designId == null) return;
+    openGeneratedDesignFromNotification(designId);
+  }
+
+  void _handleRemoteMessageTap(RemoteMessage message) {
+    final designId = _designIdFromData(message.data);
+    if (designId == null) return;
+    openGeneratedDesignFromNotification(designId);
+  }
+
   Future<void> _showRemoteNotification(RemoteMessage message) async {
     final enabled = await isRemoteNotificationsEnabled;
     if (!enabled) return;
@@ -162,6 +185,7 @@ class NotificationService {
         id: notification.hashCode,
         title: notification.title,
         body: notification.body,
+        payload: _payloadFromData(message.data),
         notificationDetails: const NotificationDetails(
           android: AndroidNotificationDetails(
             'ai_updates',
@@ -175,4 +199,29 @@ class NotificationService {
       );
     }
   }
+}
+
+String? _payloadFromData(Map<String, dynamic> data) {
+  final designId = _designIdFromData(data);
+  if (designId == null) return null;
+  return 'generated_design:$designId';
+}
+
+String? _designIdFromPayload(String? payload) {
+  if (payload == null || payload.trim().isEmpty) return null;
+  final trimmed = payload.trim();
+  if (trimmed.startsWith('generated_design:')) {
+    final value = trimmed.substring('generated_design:'.length).trim();
+    return value.isEmpty ? null : value;
+  }
+  return trimmed;
+}
+
+String? _designIdFromData(Map<String, dynamic> data) {
+  const keys = ['designId', 'generatedDesignId', 'design_id', 'projectId'];
+  for (final key in keys) {
+    final value = data[key]?.toString().trim();
+    if (value != null && value.isNotEmpty) return value;
+  }
+  return null;
 }

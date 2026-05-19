@@ -205,6 +205,26 @@
   "freshAiIdeasBody": "Scan your room to unlock personalized decor matches.",
   "myFavorites": "My Favorites",
   "favoritesSubtitle": "Saved furniture and decor ideas for your next room refresh.",
+  "favoritesFurnitureTab": "Favorites",
+  "@favoritesFurnitureTab": {
+    "description": "Favorites page tab for saved furniture."
+  },
+  "favoritesDesignsTab": "View My Designs",
+  "@favoritesDesignsTab": {
+    "description": "Favorites page tab for generated AI design suggestions."
+  },
+  "noGeneratedDesignsMessage": "No AI designs yet. Scan a room to save generated suggestions here.",
+  "@noGeneratedDesignsMessage": {
+    "description": "Empty state for the generated designs tab in Favorites."
+  },
+  "refreshGeneratedDesigns": "Refresh designs",
+  "@refreshGeneratedDesigns": {
+    "description": "Tooltip for refreshing generated AI designs."
+  },
+  "generatedDesignBadge": "AI design",
+  "@generatedDesignBadge": {
+    "description": "Small badge shown on generated design cards."
+  },
   "all": "All",
   "unread": "Unread",
   "offers": "Offers",

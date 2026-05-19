@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:decorator_ai/core/config/backend_config.dart';
+import 'package:decorator_ai/features/favorites/favorites_page.dart';
 import 'package:decorator_ai/features/notifications/notifications_page.dart';
 import 'package:decorator_ai/features/onboarding/onboarding_flow_page.dart';
 import 'package:decorator_ai/features/product/product_detail_page.dart';
@@ -467,6 +468,38 @@ void main() {
     expect(find.byType(ProductDetailPage), findsOneWidget);
     expect(find.text(l10n.productDetailTitle), findsOneWidget);
     expect(find.text('Find Similar Products with AI'), findsNothing);
+  });
+
+  testWidgets('favorites page separates generated AI designs from categories', (
+    WidgetTester tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: FavoritesPage(
+            favoriteIds: const <String>{},
+            onToggleFavorite: (_) {},
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text(l10n.favoritesFurnitureTab), findsOneWidget);
+    expect(find.text(l10n.favoritesDesignsTab), findsOneWidget);
+    expect(find.text(l10n.categoryChair), findsOneWidget);
+
+    await tester.tap(find.text(l10n.favoritesDesignsTab));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text(l10n.noGeneratedDesignsMessage), findsOneWidget);
+    expect(find.text(l10n.categoryChair), findsNothing);
   });
 
   testWidgets('notifications page shows cards and correct title', (

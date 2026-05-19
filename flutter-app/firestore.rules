@@ -28,6 +28,18 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
+    match /generatedDesigns/{designId} {
+      allow read: if request.auth != null
+        && resource.data.ownerUid == request.auth.uid;
+      allow write: if false;
+
+      match /products/{productId} {
+        allow read: if request.auth != null
+          && get(/databases/$(database)/documents/generatedDesigns/$(designId)).data.ownerUid == request.auth.uid;
+        allow write: if false;
+      }
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

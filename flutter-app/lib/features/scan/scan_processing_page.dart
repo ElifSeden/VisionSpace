@@ -81,8 +81,10 @@ class _ScanProcessingPageState extends State<ScanProcessingPage>
         onProgress: _onProgress,
       );
 
-      await AppNotificationService.instance.addAiDesignReady();
-      await _showLocalNotification(notificationText);
+      await AppNotificationService.instance.addAiDesignReady(
+        designId: project.id,
+      );
+      await _showLocalNotification(notificationText, designId: project.id);
 
       if (!mounted) return;
 
@@ -123,7 +125,10 @@ class _ScanProcessingPageState extends State<ScanProcessingPage>
     setState(() => _currentStageKey = stageKey);
   }
 
-  Future<void> _showLocalNotification(_NotificationText text) async {
+  Future<void> _showLocalNotification(
+    _NotificationText text, {
+    required String designId,
+  }) async {
     final service = NotificationService.instance;
     final enabled = await service.isLocalNotificationsEnabled;
     if (!enabled) return;
@@ -133,6 +138,7 @@ class _ScanProcessingPageState extends State<ScanProcessingPage>
       id: DateTime.now().millisecondsSinceEpoch % 100000,
       title: text.title,
       body: text.body,
+      payload: designId.trim().isEmpty ? null : 'generated_design:$designId',
       notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           'ai_updates',

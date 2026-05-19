@@ -456,6 +456,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Saved furniture and decor ideas for your next room refresh.';
 
   @override
+  String get favoritesFurnitureTab => 'Favorites';
+
+  @override
+  String get favoritesDesignsTab => 'View My Designs';
+
+  @override
+  String get noGeneratedDesignsMessage =>
+      'No AI designs yet. Scan a room to save generated suggestions here.';
+
+  @override
+  String get refreshGeneratedDesigns => 'Refresh designs';
+
+  @override
+  String get generatedDesignBadge => 'AI design';
+
+  @override
   String get all => 'All';
 
   @override

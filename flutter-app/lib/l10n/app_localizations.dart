@@ -884,6 +884,36 @@ abstract class AppLocalizations {
   /// **'Saved furniture and decor ideas for your next room refresh.'**
   String get favoritesSubtitle;
 
+  /// Favorites page tab for saved furniture.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get favoritesFurnitureTab;
+
+  /// Favorites page tab for generated AI design suggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'View My Designs'**
+  String get favoritesDesignsTab;
+
+  /// Empty state for the generated designs tab in Favorites.
+  ///
+  /// In en, this message translates to:
+  /// **'No AI designs yet. Scan a room to save generated suggestions here.'**
+  String get noGeneratedDesignsMessage;
+
+  /// Tooltip for refreshing generated AI designs.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh designs'**
+  String get refreshGeneratedDesigns;
+
+  /// Small badge shown on generated design cards.
+  ///
+  /// In en, this message translates to:
+  /// **'AI design'**
+  String get generatedDesignBadge;
+
   /// No description provided for @all.
   ///
   /// In en, this message translates to:

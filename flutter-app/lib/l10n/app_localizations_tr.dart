@@ -454,6 +454,22 @@ class AppLocalizationsTr extends AppLocalizations {
       'Sonraki oda yenilemen için kaydedilen mobilya ve dekor fikirleri.';
 
   @override
+  String get favoritesFurnitureTab => 'Favoriler';
+
+  @override
+  String get favoritesDesignsTab => 'Tasarımlarım';
+
+  @override
+  String get noGeneratedDesignsMessage =>
+      'Henüz AI tasarım yok. Üretilen önerileri burada kaydetmek için bir oda tara.';
+
+  @override
+  String get refreshGeneratedDesigns => 'Tasarımları yenile';
+
+  @override
+  String get generatedDesignBadge => 'AI tasarım';
+
+  @override
   String get all => 'Tümü';
 
   @override

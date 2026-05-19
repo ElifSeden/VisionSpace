@@ -267,9 +267,10 @@ Uygulama içinden Profile ekranındaki Server URL alanı ile URL geçici veya ka
 - `DecoratorAiApi`: UI'nın kullandığı soyut API sınırı.
 - `BackendDecoratorAiApi`: `ai-service` REST API'sini kullanır.
 - `FirestoreDecoratorAiApi`: Curated Home verisi için Firestore okur, hata/boş durumda mock'a düşer.
+- `GeneratedDesignsRepository`: Kullanıcının Firestore `generatedDesigns` koleksiyonundaki AI tasarım önerilerini Favorites ekranında ve bildirim yönlendirmelerinde okur.
 - `MockDecoratorAiApi`: Test ve offline geliştirme için statik veri döner.
 - `AiBackendClient`: Upload, job create, job poll ve backend image URL dönüştürme işlemlerini yapar.
-- `NotificationService`: Local notification ve FCM foreground notification altyapısı.
+- `NotificationService`: Local notification, FCM foreground notification ve tasarım bildiriminden `DesignDetailPage` yönlendirme altyapısı. Tasarım bildirim data payload'ı `designId`, `generatedDesignId`, `design_id` veya `projectId` taşımalıdır.
 - `AppNotificationService`: Uygulama içi bildirim listesi ve okunmamış sayaç yönetimi.
 
 ### 5.4 Lokalizasyon
@@ -289,7 +290,7 @@ Firebase şu anda Flutter uygulamasının istemci tarafı cloud altyapısıdır.
 Kullanılan parçalar:
 
 - Firebase Core: Uygulama başlangıcında Firebase init.
-- Firestore: Curated tasarım projeleri ve ürün hotspot seed verileri.
+- Firestore: Curated tasarım projeleri, ürün hotspot seed verileri ve kullanıcıya ait `generatedDesigns` AI tasarım önerileri.
 - Firebase Auth: Google sign-in entegrasyonu.
 - Firebase Messaging: Remote notification altyapısı.
 - Flutter Local Notifications: Cihaz içi local notification gösterimi.
@@ -602,7 +603,7 @@ Firestore rules ve indexes deploy etmek için:
 firebase deploy --only firestore
 ```
 
-Seed verileri yüklemek için `flutter-app/firestore_seed/README.md` içeriğini takip edin veya Firebase Console üzerinden `designProjects` ve alt `products` koleksiyonlarını elle oluşturun.
+Seed verileri yüklemek için `flutter-app/firestore_seed/README.md` içeriğini takip edin veya Firebase Console üzerinden `designProjects` ve alt `products` koleksiyonlarını elle oluşturun. Kullanıcıya özel AI tasarım sonuçları `generatedDesigns/{designId}` altında `ownerUid`, `title`, `spaceType`, `style`, `imageUrl`, `createdAt` ve alt `products` koleksiyonu ile saklanır.
 
 ### 7.10 Flutter Uygulamasını Kurun ve Çalıştırın
 

@@ -274,17 +274,43 @@ class _ProductHeader extends StatelessWidget {
           ),
           Align(
             alignment: Alignment.centerRight,
-            child: IconButton(
+            child: _ProductFavoriteButton(
+              isFavorite: isFavorite,
               onPressed: onToggleFavorite,
-              icon: Icon(
-                isFavorite
-                    ? Icons.favorite_rounded
-                    : Icons.favorite_border_rounded,
-              ),
-              color: isFavorite ? const Color(0xFFE84D7A) : AppColors.ink,
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ProductFavoriteButton extends StatelessWidget {
+  const _ProductFavoriteButton({
+    required this.isFavorite,
+    required this.onPressed,
+  });
+
+  final bool isFavorite;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 38,
+      height: 38,
+      child: IconButton.filled(
+        padding: EdgeInsets.zero,
+        onPressed: onPressed,
+        icon: Icon(
+          isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+          size: 20,
+        ),
+        style: IconButton.styleFrom(
+          backgroundColor: AppColors.surface.withValues(alpha: 0.94),
+          foregroundColor: isFavorite ? AppColors.heart : AppColors.ink,
+          elevation: 2,
+        ),
       ),
     );
   }

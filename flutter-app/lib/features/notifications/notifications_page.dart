@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/app_notification.dart';
+import '../../navigation/app_navigator.dart';
 import '../../services/app_notification_service.dart';
 
 class NotificationsPage extends StatefulWidget {
@@ -83,6 +84,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
                       _notifications = AppNotificationService.instance
                           .loadNotifications();
                     });
+                    final designId = notification.designId;
+                    if (designId != null && designId.trim().isNotEmpty) {
+                      await openGeneratedDesignFromNotification(designId);
+                    }
                   },
                 );
               },

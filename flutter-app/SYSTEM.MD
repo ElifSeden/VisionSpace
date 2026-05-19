@@ -120,24 +120,28 @@ Keep models small and immutable unless real API integration requires parsing, se
 
 The backend architecture is split:
 
-- Firestore is the database for curated app data such as published design projects and product hotspots used by the Home feed.
+- Firestore is the database for curated app data such as published design projects and product hotspots used by the Home feed, plus authenticated users' generated AI design suggestions shown from Favorites.
 - The FastAPI `ai-service` owns AI design jobs, image uploads, product retrieval, and generated scan results. The Flutter client never holds privileged AI provider credentials or server prompts.
 - The Profile settings card exposes the ai-service base URL through `BackendConfig`, persisted in `SharedPreferences`. Production or server deployments should prefer `--dart-define=BACKEND_BASE_URL=https://your-api.example.com`; Profile override remains useful for local testing.
 - Cloud Functions may be introduced later for Firebase-adjacent automation, but do not assume they exist or route AI calls through them.
 
-`FirestoreDecoratorAiApi` reads published design projects from Firestore and falls back to `MockDecoratorAiApi` when Firestore is unavailable or empty. `BackendDecoratorAiApi` uploads captured room photos to `POST /uploads/room-image`, creates jobs with `POST /design-jobs`, polls `GET /design-jobs/{job_id}`, maps backend designs/products into `DesignProject` and `ProductSpot`, and resolves relative backend image paths through `/images/...`.
+`FirestoreDecoratorAiApi` reads published design projects from Firestore and falls back to `MockDecoratorAiApi` when Firestore is unavailable or empty. `GeneratedDesignsRepository` reads authenticated-user generated design suggestions from `generatedDesigns` for the Favorites screen and notification deep links. `BackendDecoratorAiApi` uploads captured room photos to `POST /uploads/room-image`, creates jobs with `POST /design-jobs`, polls `GET /design-jobs/{job_id}`, maps backend designs/products into `DesignProject` and `ProductSpot`, and resolves relative backend image paths through `/images/...`.
 
 Firestore collections:
 
 - `designProjects/{projectId}`: curated room/design cards shown on Home and Design Detail.
 - `designProjects/{projectId}/products/{productId}`: product hotspots and matched shopping items for a design.
 - `scans/{scanId}`: queued scan submissions from the camera flow.
+- `generatedDesigns/{designId}`: generated AI design suggestions for a signed-in user.
+- `generatedDesigns/{designId}/products/{productId}`: matched products and hotspots for a generated design.
 
 `designProjects` documents use `title`, `spaceType`, `style`, `imageUrl`, `isPublished`, and `sortOrder`.
 
 `products` subcollection documents use `name`, `brand`, `price`, `matchScore`, `left`, `top`, `imageUrl`, `buyUrl`, and `sortOrder`.
 
 `scans` documents use `localScanId`, `status`, and `createdAt`.
+
+`generatedDesigns` documents use `ownerUid`, `title`, `spaceType`, `style`, `imageUrl`, and `createdAt`. Its `products` subcollection uses the same product fields as curated design project products.
 
 Deploy Firestore rules and indexes with:
 
@@ -156,7 +160,7 @@ Backend scan behavior rules:
 - Do not put privileged AI provider credentials, server-only prompts, billing logic, or trusted moderation decisions in the Flutter client.
 - Model server responses with typed DTOs or domain mapping in the service layer.
 - Keep UI states explicit: loading/progress, success, empty, recoverable error, and permission error where relevant.
-- Trigger `AppNotificationService.addAiDesignReady()` and a local notification after a backend design job completes, even if the processing page is no longer mounted.
+- Trigger `AppNotificationService.addAiDesignReady(designId: project.id)` and a local notification with payload `generated_design:{designId}` after a backend design job completes, even if the processing page is no longer mounted. FCM design-ready notifications should include one of `designId`, `generatedDesignId`, `design_id`, or `projectId` in their data payload so taps can open `DesignDetailPage` from Firestore.
 - Add tests around service behavior or widget behavior using fakes.
 
 If Cloud Functions are added later:
@@ -280,7 +284,7 @@ Onboarding state uses the `redux` package:
 
 - `IndexedStack` to preserve tab page state.
 - Dark floating bottom navigation with selected white pill.
-- Four tabs: Home, Scan, Saved placeholder, Profile placeholder.
+- Four tabs: Home, Scan, Saved/Favorites, Profile. Favorites has a separate furniture favorites mode and generated AI designs mode.
 
 Any new tab content must leave enough bottom padding for the floating nav.
 
@@ -288,7 +292,7 @@ Any new tab content must leave enough bottom padding for the floating nav.
 
 `HomePage`:
 
-- Fetches projects once from `MockDecoratorAiApi`.
+- Fetches curated projects once from `FirestoreDecoratorAiApi`, with mock fallback.
 - Displays a brand/header row, notification action, dark scan promotion panel, and design project cards.
 - Project cards use large room images, dark bottom gradient, title, metadata, and circular arrow affordance.
 
@@ -314,7 +318,7 @@ If adding loading, empty, or error states, keep them visually consistent and loc
 
 - Uploads the image to the backend, creates a design job, and polls status while the AI stages run in the backend worker.
 - Shows localized stage text for validation/analysis, strategy, product retrieval, placement, and completion phases.
-- Triggers in-app and local notifications when a result is ready, then opens `DesignDetailPage` with backend-mapped `DesignProject` data.
+- Triggers in-app and local notifications with the generated design id when a result is ready, then opens `DesignDetailPage` with backend-mapped `DesignProject` data.
 
 Camera-facing changes need tests where practical and careful manual/platform verification because plugin behavior may differ by platform.
 
