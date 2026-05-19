@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     mock_ai: bool = False
+    cors_allow_origins: list[str] = Field(default_factory=lambda: ["*"])
 
     database_url: str = "postgresql+psycopg://postgres:postgres@postgres:5432/furniture_ai"
     redis_url: str = "redis://redis:6379/0"

@@ -9,9 +9,9 @@ decorator-ai is a Flutter app named `decorator_ai` in `pubspec.yaml`. It is an A
 - Users enter through a welcome screen.
 - The main app shell exposes Home, Scan, Saved, and Profile tabs.
 - Users can browse AI design suggestions, inspect generated rooms, tap product hotspots, and open matched store links.
-- The scan flow opens the device camera, captures a room image, and currently returns mock AI analysis data.
-- Firebase Core is initialized at startup with generated `firebase_options.dart`; Firestore is the planned database.
-- AI service calls and certain backend operations are expected to go through a separate server API, not directly through Firebase. That server is not set up yet.
+- The scan flow collects a design brief, opens the device camera, captures a room image, uploads it to `ai-service`, creates a backend design job, polls until the job completes, then opens the generated design detail.
+- Firebase Core is initialized at startup with generated `firebase_options.dart`; Firestore remains the source for curated published design projects.
+- AI service calls and backend operations that require server trust go through the FastAPI `ai-service`, not directly through Firebase or the Flutter client.
 - Cloud Functions may be added later for Firebase-adjacent automation, but no Cloud Functions are currently implemented.
 
 The app currently targets Flutter Android builds. The active product surface is a mobile-first Material 3 experience constrained around a narrow phone layout in several screens.
@@ -19,6 +19,7 @@ The app currently targets Flutter Android builds. The active product surface is 
 ## Repository Layout
 
 - `lib/main.dart`: Flutter entrypoint, Firebase initialization, `MaterialApp`, global theme, supported locales, and home route.
+- `lib/core/config/`: Client-side runtime configuration such as the ai-service base URL.
 - `lib/core/theme/`: Shared design tokens and theme.
 - `lib/core/widgets/`: Reusable UI primitives.
 - `lib/navigation/app_shell.dart`: Bottom-tab shell and placeholder tab pages.
@@ -29,7 +30,7 @@ The app currently targets Flutter Android builds. The active product surface is 
 - `lib/features/design/`: Design detail page with room image hotspots and product list.
 - `lib/features/product/`: Product detail page and store offer links.
 - `lib/models/`: Plain immutable domain models.
-- `lib/services/`: API abstraction, current Firestore read/write implementation, and mock fallback implementation.
+- `lib/services/`: API abstraction, Firestore read/write implementation, ai-service REST client, notifications, and mock fallback implementation.
 - `lib/l10n/`: ARB localization files.
 - `test/`: Flutter widget tests.
 - `firestore.rules`: Firestore security rules.
@@ -43,6 +44,8 @@ The app currently targets Flutter Android builds. The active product surface is 
 
 - Calls `WidgetsFlutterBinding.ensureInitialized()`.
 - Initializes Firebase with `DefaultFirebaseOptions.currentPlatform`.
+- Initializes notification and Google sign-in services.
+- Loads `BackendConfig` from `SharedPreferences`; the backend URL resolves from saved Profile setting, then `--dart-define=BACKEND_BASE_URL=...`, then a platform-aware local default (`http://10.0.2.2:8000` on Android emulator, `http://localhost:8000` elsewhere).
 - Runs `DecoratorAiApp`.
 
 `DecoratorAiApp` builds the root `MaterialApp`:
@@ -64,8 +67,9 @@ Navigation is currently simple and imperative:
 - `AppShell` keeps tab state in `_index`, persists the selected tab in `SharedPreferences`, and renders pages with `IndexedStack`.
 - On app startup after first entry, `_StartupPage` restores the last persisted shell tab.
 - The Home scan promotion card selects the Scan tab through an `AppShell` callback.
-- The Scan tab opens `CameraScanPage` with `Navigator.push`.
-- `CameraScanPage` pushes replacement to `DesignDetailPage` after mock analysis succeeds.
+- The Scan tab opens `CameraScanPage` with the current `ScanDesignOptions`.
+- `CameraScanPage` captures a photo and pushes replacement to `ScanProcessingPage`.
+- `ScanProcessingPage` uploads the image, creates a backend design job, polls background AI stages, triggers the notification services when the result is ready, and then pushes replacement to `DesignDetailPage`.
 - `HomePage` project cards push `DesignDetailPage`.
 - `DesignDetailPage` hotspots and product tiles push `ProductDetailPage`.
 - Detail pages use local back buttons that call `Navigator.pop`.
@@ -108,17 +112,20 @@ Keep models small and immutable unless real API integration requires parsing, se
 `lib/services/decorator_ai_api.dart` defines:
 
 - `DecoratorAiApi`
+- `BackendDecoratorAiApi`
 - `FirestoreDecoratorAiApi`
 - `MockDecoratorAiApi`
 
-The intended backend architecture is split:
+`lib/services/ai_backend_client.dart` defines the typed REST client and `ScanDesignOptions` payload for `ai-service`.
 
-- Firestore is the database for app data such as published design projects, product hotspots, and queued scan metadata.
-- A separate server API is expected to own AI service calls and backend operations that should not run from the client.
-- That server API is not set up yet, so the current app must keep using the service abstraction and mock fallback behavior.
-- Cloud Functions may be introduced later for event-driven Firebase workflows, but do not assume they exist or route AI calls through them.
+The backend architecture is split:
 
-`FirestoreDecoratorAiApi` currently reads published design projects from Firestore and falls back to `MockDecoratorAiApi` when Firestore is unavailable or empty. The camera analysis path writes a queued scan document to `scans` and then falls back to mock analysis until the separate backend/AI server exists.
+- Firestore is the database for curated app data such as published design projects and product hotspots used by the Home feed.
+- The FastAPI `ai-service` owns AI design jobs, image uploads, product retrieval, and generated scan results. The Flutter client never holds privileged AI provider credentials or server prompts.
+- The Profile settings card exposes the ai-service base URL through `BackendConfig`, persisted in `SharedPreferences`. Production or server deployments should prefer `--dart-define=BACKEND_BASE_URL=https://your-api.example.com`; Profile override remains useful for local testing.
+- Cloud Functions may be introduced later for Firebase-adjacent automation, but do not assume they exist or route AI calls through them.
+
+`FirestoreDecoratorAiApi` reads published design projects from Firestore and falls back to `MockDecoratorAiApi` when Firestore is unavailable or empty. `BackendDecoratorAiApi` uploads captured room photos to `POST /uploads/room-image`, creates jobs with `POST /design-jobs`, polls `GET /design-jobs/{job_id}`, maps backend designs/products into `DesignProject` and `ProductSpot`, and resolves relative backend image paths through `/images/...`.
 
 Firestore collections:
 
@@ -140,16 +147,16 @@ firebase deploy --only firestore
 
 Seed data lives in `firestore_seed/design_projects.json`; import it with the Firebase CLI or copy the documents manually in the Firebase Console.
 
-The mock service returns static `DesignProject` data and simulates latency with short `Future.delayed` calls.
+The mock service returns static `DesignProject` data and simulates latency with short `Future.delayed` calls. It remains useful for tests, Firestore fallback, and offline UI development.
 
-When replacing the mock AI analysis with the real server API:
+Backend scan behavior rules:
 
-- Preserve the abstraction boundary so UI widgets do not own networking details.
-- Keep Firestore as the database unless the product architecture changes explicitly.
+- Preserve the abstraction boundary so UI widgets do not own raw HTTP details.
+- Keep Firestore for curated Home data unless the product architecture changes explicitly.
 - Do not put privileged AI provider credentials, server-only prompts, billing logic, or trusted moderation decisions in the Flutter client.
 - Model server responses with typed DTOs or domain mapping in the service layer.
-- Add typed parsing and error handling in the service layer.
-- Keep UI states explicit: loading, success, empty, recoverable error, and permission error where relevant.
+- Keep UI states explicit: loading/progress, success, empty, recoverable error, and permission error where relevant.
+- Trigger `AppNotificationService.addAiDesignReady()` and a local notification after a backend design job completes, even if the processing page is no longer mounted.
 - Add tests around service behavior or widget behavior using fakes.
 
 If Cloud Functions are added later:
@@ -293,14 +300,21 @@ If adding loading, empty, or error states, keep them visually consistent and loc
 
 - Explains the scan flow.
 - Shows a dark rounded preview panel with a remote room image and scan frame.
-- Opens `CameraScanPage`.
+- Collects the backend design brief: room dimensions, requested design count, replacement intent, furniture types, style, material, colors, mood, size, and extra notes.
+- Converts the brief into `ScanDesignOptions` and opens `CameraScanPage`.
 
 `CameraScanPage`:
 
 - Uses the `camera` plugin.
 - Chooses the back camera when available.
 - Handles camera absence, access denial, initialization errors, capture errors, and analyzing overlay.
-- Captures an image, passes the local path as `scanId`, and navigates to `DesignDetailPage`.
+- Captures an image and opens `ScanProcessingPage` with the local image path and `ScanDesignOptions`.
+
+`ScanProcessingPage`:
+
+- Uploads the image to the backend, creates a design job, and polls status while the AI stages run in the backend worker.
+- Shows localized stage text for validation/analysis, strategy, product retrieval, placement, and completion phases.
+- Triggers in-app and local notifications when a result is ready, then opens `DesignDetailPage` with backend-mapped `DesignProject` data.
 
 Camera-facing changes need tests where practical and careful manual/platform verification because plugin behavior may differ by platform.
 

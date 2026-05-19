@@ -148,6 +148,7 @@ The API is self-documenting via **OpenAPI**. When the service is running, visit:
 | `POST` | `/design-jobs` | Create a design job. Enqueues the AI pipeline. Returns `{job_id, status}`. |
 | `GET` | `/design-jobs/{job_id}` | Poll job status. Returns full design results when completed. |
 | `POST` | `/products/search` | Search the product catalog by semantic intent. |
+| `GET` | `/images/{relative_path}` | Serves stored room, product, and generated images from `LOCAL_IMAGE_ROOT`. |
 
 ### Request/Response Schemas
 
@@ -195,9 +196,11 @@ The API is self-documenting via **OpenAPI**. When the service is running, visit:
             "external_id": "22DST2550CVPD",
             "name": "Destina Konsol",
             "category": "console_table",
+            "role": "console_table",
             "source_url": "https://...",
             "price": {"amount": 18370.0, "currency": "TL"},
-            "reason": "Selected for warm tones and storage capability."
+            "reason": "Selected for warm tones and storage capability.",
+            "score": 0.91
           }
         ],
         "clickable_regions": [

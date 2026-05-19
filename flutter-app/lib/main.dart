@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:google_sign_in/google_sign_in.dart';
+import 'core/config/backend_config.dart';
 import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
 import 'features/welcome/welcome_page.dart';
@@ -31,6 +32,7 @@ void main() async {
     enableRemoteNotifications: firebaseInitialized,
   );
   await GoogleSignIn.instance.initialize();
+  await BackendConfig.instance.load();
 
   runApp(const DecoratorAiApp());
 }

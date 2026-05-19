@@ -3,15 +3,69 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/remote_image.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/ai_backend_client.dart';
 import 'camera_scan_page.dart';
 
-class ScanPage extends StatelessWidget {
+class ScanPage extends StatefulWidget {
   const ScanPage({super.key});
 
+  @override
+  State<ScanPage> createState() => _ScanPageState();
+}
+
+class _ScanPageState extends State<ScanPage> {
+  final _wallLengthController = TextEditingController(text: '400');
+  final _roomDepthController = TextEditingController(text: '350');
+  final _ceilingHeightController = TextEditingController(text: '270');
+  final _extraPreferencesController = TextEditingController();
+
+  bool _replaceExistingFurniture = false;
+  int _designCount = 2;
+  final Set<String> _requestedFurnitureTypes = <String>{};
+  final Set<String> _colors = <String>{};
+  String? _designStyle;
+  String? _material;
+  String? _temperature;
+  String? _size;
+
+  @override
+  void dispose() {
+    _wallLengthController.dispose();
+    _roomDepthController.dispose();
+    _ceilingHeightController.dispose();
+    _extraPreferencesController.dispose();
+    super.dispose();
+  }
+
   void _openCamera(BuildContext context) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const CameraScanPage()));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CameraScanPage(options: _scanOptions()),
+      ),
+    );
+  }
+
+  ScanDesignOptions _scanOptions() {
+    return ScanDesignOptions(
+      currentWallLengthCm: _parseDimension(_wallLengthController.text),
+      roomDepthCm: _parseDimension(_roomDepthController.text),
+      ceilingHeightCm: _parseDimension(_ceilingHeightController.text),
+      replaceExistingFurniture: _replaceExistingFurniture,
+      requestedFurnitureTypes: _requestedFurnitureTypes.toList()..sort(),
+      designStyle: _designStyle,
+      material: _material,
+      colors: _colors.toList()..sort(),
+      temperature: _temperature,
+      size: _size,
+      extraPreferences: _extraPreferencesController.text,
+      designCount: _designCount,
+    );
+  }
+
+  double? _parseDimension(String value) {
+    final normalized = value.trim().replaceAll(',', '.');
+    if (normalized.isEmpty) return null;
+    return double.tryParse(normalized);
   }
 
   void _showTips(BuildContext context, AppLocalizations l10n) {
@@ -170,13 +224,371 @@ class ScanPage extends StatelessWidget {
             label: l10n.bestResultsNaturalLight,
             onTap: () => _openCamera(context),
           ),
-          const SizedBox(height: 26),
+          const SizedBox(height: 24),
+          _preferencesCard(l10n),
+          const SizedBox(height: 24),
           _TakePhotoButton(l10n: l10n, onTap: () => _openCamera(context)),
           const SizedBox(height: 24),
           _HowItWorksCard(l10n: l10n),
           const SizedBox(height: 16),
           _TipsCard(l10n: l10n, onTap: () => _showTips(context, l10n)),
         ],
+      ),
+    );
+  }
+
+  Widget _preferencesCard(AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.ink.withValues(alpha: 0.06),
+            blurRadius: 22,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.sage.withValues(alpha: 0.13),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: const Icon(Icons.tune_rounded, color: AppColors.sage),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.scanPreferencesTitle,
+                      style: const TextStyle(
+                        color: AppColors.ink,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.scanPreferencesSubtitle,
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        height: 1.3,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Expanded(
+                child: _DimensionField(
+                  controller: _wallLengthController,
+                  label: l10n.scanRoomWidthLabel,
+                  suffix: l10n.scanCentimetersSuffix,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _DimensionField(
+                  controller: _roomDepthController,
+                  label: l10n.scanRoomDepthLabel,
+                  suffix: l10n.scanCentimetersSuffix,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _DimensionField(
+                  controller: _ceilingHeightController,
+                  label: l10n.scanCeilingHeightLabel,
+                  suffix: l10n.scanCentimetersSuffix,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<int>(
+                  initialValue: _designCount,
+                  decoration: _inputDecoration(l10n.scanDesignCountLabel),
+                  borderRadius: BorderRadius.circular(18),
+                  items: const [1, 2, 3]
+                      .map(
+                        (count) => DropdownMenuItem<int>(
+                          value: count,
+                          child: Text('$count'),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) setState(() => _designCount = value);
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SwitchListTile.adaptive(
+                  contentPadding: EdgeInsets.zero,
+                  value: _replaceExistingFurniture,
+                  activeTrackColor: AppColors.sage,
+                  title: Text(
+                    l10n.scanReplaceFurnitureLabel,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.ink,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  onChanged: (value) {
+                    setState(() => _replaceExistingFurniture = value);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _sectionLabel(l10n.scanFurnitureTypesLabel),
+          _multiSelectChips(_furnitureChoices(l10n), _requestedFurnitureTypes),
+          const SizedBox(height: 12),
+          _sectionLabel(l10n.scanStyleLabel),
+          _singleSelectChips(
+            _styleChoices(l10n),
+            _designStyle,
+            (value) => setState(() => _designStyle = value),
+          ),
+          const SizedBox(height: 12),
+          _sectionLabel(l10n.scanMaterialLabel),
+          _singleSelectChips(
+            _materialChoices(l10n),
+            _material,
+            (value) => setState(() => _material = value),
+          ),
+          const SizedBox(height: 12),
+          _sectionLabel(l10n.scanColorsLabel),
+          _multiSelectChips(_colorChoices(l10n), _colors),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionLabel(l10n.scanTemperatureLabel),
+                    _singleSelectChips(
+                      _temperatureChoices(l10n),
+                      _temperature,
+                      (value) => setState(() => _temperature = value),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionLabel(l10n.scanSizeLabel),
+                    _singleSelectChips(
+                      _sizeChoices(l10n),
+                      _size,
+                      (value) => setState(() => _size = value),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _extraPreferencesController,
+            minLines: 2,
+            maxLines: 4,
+            decoration: _inputDecoration(
+              l10n.scanExtraPreferencesLabel,
+            ).copyWith(hintText: l10n.scanExtraPreferencesHint),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: AppColors.ink,
+          fontSize: 13,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      filled: true,
+      fillColor: AppColors.cream,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
+    );
+  }
+
+  Widget _multiSelectChips(List<_ScanChoice> choices, Set<String> selected) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: choices.map((choice) {
+        final isSelected = selected.contains(choice.value);
+        return FilterChip(
+          label: Text(choice.label),
+          selected: isSelected,
+          onSelected: (value) {
+            setState(() {
+              if (value) {
+                selected.add(choice.value);
+              } else {
+                selected.remove(choice.value);
+              }
+            });
+          },
+          selectedColor: AppColors.sage.withValues(alpha: 0.22),
+          checkmarkColor: AppColors.sage,
+          labelStyle: const TextStyle(fontWeight: FontWeight.w800),
+          side: const BorderSide(color: AppColors.border),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _singleSelectChips(
+    List<_ScanChoice> choices,
+    String? selected,
+    ValueChanged<String?> onChanged,
+  ) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: choices.map((choice) {
+        final isSelected = selected == choice.value;
+        return ChoiceChip(
+          label: Text(choice.label),
+          selected: isSelected,
+          onSelected: (_) => onChanged(isSelected ? null : choice.value),
+          selectedColor: AppColors.sage.withValues(alpha: 0.22),
+          labelStyle: const TextStyle(fontWeight: FontWeight.w800),
+          side: const BorderSide(color: AppColors.border),
+        );
+      }).toList(),
+    );
+  }
+
+  List<_ScanChoice> _furnitureChoices(AppLocalizations l10n) => [
+    _ScanChoice('sofa', l10n.scanFurnitureSofa),
+    _ScanChoice('armchair', l10n.scanFurnitureArmchair),
+    _ScanChoice('coffee_table', l10n.scanFurnitureCoffeeTable),
+    _ScanChoice('carpet', l10n.scanFurnitureRug),
+    _ScanChoice('tv_unit', l10n.scanFurnitureTvUnit),
+    _ScanChoice('storage', l10n.scanFurnitureStorage),
+    _ScanChoice('lighting', l10n.scanFurnitureLighting),
+  ];
+
+  List<_ScanChoice> _styleChoices(AppLocalizations l10n) => [
+    _ScanChoice('modern', l10n.scanStyleModern),
+    _ScanChoice('scandinavian', l10n.scanStyleScandinavian),
+    _ScanChoice('minimalist', l10n.scanStyleMinimal),
+    _ScanChoice('classic', l10n.scanStyleClassic),
+  ];
+
+  List<_ScanChoice> _materialChoices(AppLocalizations l10n) => [
+    _ScanChoice('wood', l10n.scanMaterialWood),
+    _ScanChoice('fabric', l10n.scanMaterialFabric),
+    _ScanChoice('metal', l10n.scanMaterialMetal),
+    _ScanChoice('glass', l10n.scanMaterialGlass),
+  ];
+
+  List<_ScanChoice> _colorChoices(AppLocalizations l10n) => [
+    _ScanChoice('beige', l10n.scanColorBeige),
+    _ScanChoice('oak', l10n.scanColorOak),
+    _ScanChoice('white', l10n.scanColorWhite),
+    _ScanChoice('gray', l10n.scanColorGray),
+    _ScanChoice('green', l10n.scanColorGreen),
+  ];
+
+  List<_ScanChoice> _temperatureChoices(AppLocalizations l10n) => [
+    _ScanChoice('warm', l10n.scanTemperatureWarm),
+    _ScanChoice('neutral', l10n.scanTemperatureNeutral),
+    _ScanChoice('cold', l10n.scanTemperatureCool),
+  ];
+
+  List<_ScanChoice> _sizeChoices(AppLocalizations l10n) => [
+    _ScanChoice('small', l10n.scanSizeSmall),
+    _ScanChoice('medium', l10n.scanSizeMedium),
+    _ScanChoice('large', l10n.scanSizeLarge),
+  ];
+}
+
+class _ScanChoice {
+  const _ScanChoice(this.value, this.label);
+
+  final String value;
+  final String label;
+}
+
+class _DimensionField extends StatelessWidget {
+  const _DimensionField({
+    required this.controller,
+    required this.label,
+    required this.suffix,
+  });
+
+  final TextEditingController controller;
+  final String label;
+  final String suffix;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      decoration: InputDecoration(
+        labelText: label,
+        suffixText: suffix,
+        filled: true,
+        fillColor: AppColors.cream,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 12,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
       ),
     );
   }

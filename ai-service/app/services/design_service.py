@@ -72,6 +72,7 @@ class DesignService:
                     external_id=product.external_id,
                     name=product.name,
                     category=product.category,
+                    role=selected.role,
                     source_url=product.source_url,
                     image_path=primary.relative_path if primary else None,
                     price={
@@ -81,6 +82,7 @@ class DesignService:
                     if product.price_amount is not None
                     else None,
                     reason=selected.reason,
+                    score=float(selected.score) if selected.score is not None else None,
                 )
             )
         return DesignOut(

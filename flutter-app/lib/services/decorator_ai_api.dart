@@ -1,12 +1,82 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import '../models/design_project.dart';
 import '../models/product_spot.dart';
+import 'ai_backend_client.dart';
 
 abstract class DecoratorAiApi {
   Future<List<DesignProject>> fetchProjects();
   Future<DesignProject> analyzeSpace({required String scanId});
+
+  /// Submit a room scan to the backend and poll until completion.
+  ///
+  /// [onProgress] is called with each poll result for stage updates.
+  /// Returns the first completed design project or throws on failure.
+  Future<DesignProject> submitAndPollScan({
+    required File imageFile,
+    ScanDesignOptions options = const ScanDesignOptions(),
+    void Function(DesignJobResult)? onProgress,
+  });
+}
+
+/// Real backend implementation using the ai-service REST API.
+class BackendDecoratorAiApi implements DecoratorAiApi {
+  BackendDecoratorAiApi({AiBackendClient? client})
+    : _client = client ?? AiBackendClient();
+
+  final AiBackendClient _client;
+
+  @override
+  Future<List<DesignProject>> fetchProjects() async {
+    // Home feed still uses Firestore/mock data for curated projects.
+    // Backend designs are created per-scan, not pre-curated.
+    return const MockDecoratorAiApi().fetchProjects();
+  }
+
+  @override
+  Future<DesignProject> analyzeSpace({required String scanId}) async {
+    // Legacy method - use submitAndPollScan instead.
+    return submitAndPollScan(imageFile: File(scanId));
+  }
+
+  @override
+  Future<DesignProject> submitAndPollScan({
+    required File imageFile,
+    ScanDesignOptions options = const ScanDesignOptions(),
+    void Function(DesignJobResult)? onProgress,
+  }) async {
+    // Step 1: Upload the room image
+    final upload = await _client.uploadRoomImage(imageFile);
+
+    // Step 2: Create the design job
+    final jobId = await _client.createDesignJob(
+      roomImagePath: upload.imagePath,
+      options: options,
+    );
+
+    // Step 3: Poll until completion
+    final result = await _client.pollDesignJob(jobId, onProgress: onProgress);
+
+    if (result.isFailed) {
+      throw BackendException(result.errorMessage ?? 'Design job failed');
+    }
+
+    if (result.designs.isEmpty) {
+      throw const BackendException('No designs were generated');
+    }
+
+    // Map the first design to a DesignProject
+    return DesignProject.fromBackendJson(
+      result.designs.first,
+      imageWidth: upload.width,
+      imageHeight: upload.height,
+      roomImageUrl: _client.imageUrl(upload.imagePath),
+      imageUrlBuilder: _client.imageUrl,
+    );
+  }
 }
 
 class FirestoreDecoratorAiApi implements DecoratorAiApi {
@@ -79,6 +149,20 @@ class FirestoreDecoratorAiApi implements DecoratorAiApi {
 
     return _fallback.analyzeSpace(scanId: scanId);
   }
+
+  @override
+  Future<DesignProject> submitAndPollScan({
+    required File imageFile,
+    ScanDesignOptions options = const ScanDesignOptions(),
+    void Function(DesignJobResult)? onProgress,
+  }) async {
+    // Firestore API does not support the full backend flow; fallback to mock.
+    return _fallback.submitAndPollScan(
+      imageFile: imageFile,
+      options: options,
+      onProgress: onProgress,
+    );
+  }
 }
 
 class MockDecoratorAiApi implements DecoratorAiApi {
@@ -93,6 +177,34 @@ class MockDecoratorAiApi implements DecoratorAiApi {
   @override
   Future<DesignProject> analyzeSpace({required String scanId}) async {
     await Future<void>.delayed(const Duration(milliseconds: 500));
+    return _livingRoom;
+  }
+
+  @override
+  Future<DesignProject> submitAndPollScan({
+    required File imageFile,
+    ScanDesignOptions options = const ScanDesignOptions(),
+    void Function(DesignJobResult)? onProgress,
+  }) async {
+    // Simulate the full poll flow with stage updates.
+    const stages = [
+      'analyze_room',
+      'create_design_strategies',
+      'retrieve_candidates',
+      'plan_placements',
+      'persist_result',
+    ];
+    for (final stage in stages) {
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      onProgress?.call(
+        DesignJobResult(
+          jobId: 'mock-job',
+          status: 'running',
+          currentStage: stage,
+        ),
+      );
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 300));
     return _livingRoom;
   }
 }

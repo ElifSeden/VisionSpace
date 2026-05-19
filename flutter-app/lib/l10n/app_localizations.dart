@@ -1081,6 +1081,372 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Take the photo from a corner if possible.'**
   String get scanTipCornerPhoto;
+
+  /// No description provided for @scanProcessingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating Your Design'**
+  String get scanProcessingTitle;
+
+  /// No description provided for @scanStageAnalyzing.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing your room...'**
+  String get scanStageAnalyzing;
+
+  /// No description provided for @scanStageDesigning.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating design strategies...'**
+  String get scanStageDesigning;
+
+  /// No description provided for @scanStageSearching.
+  ///
+  /// In en, this message translates to:
+  /// **'Finding matching furniture...'**
+  String get scanStageSearching;
+
+  /// No description provided for @scanStagePlanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Planning furniture layout...'**
+  String get scanStagePlanning;
+
+  /// No description provided for @scanStageCompleting.
+  ///
+  /// In en, this message translates to:
+  /// **'Finalizing your design...'**
+  String get scanStageCompleting;
+
+  /// No description provided for @scanFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Design could not be created. Please try again.'**
+  String get scanFailed;
+
+  /// No description provided for @scanUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Room image could not be uploaded.'**
+  String get scanUploadFailed;
+
+  /// No description provided for @scanStageRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get scanStageRetry;
+
+  /// No description provided for @notificationDesignReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Your AI design is ready!'**
+  String get notificationDesignReady;
+
+  /// No description provided for @notificationDesignReadyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to view your personalized furniture suggestions.'**
+  String get notificationDesignReadyBody;
+
+  /// No description provided for @backendUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Server URL'**
+  String get backendUrlLabel;
+
+  /// Android notification channel name for completed AI design notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Design AI Updates'**
+  String get notificationDesignChannelName;
+
+  /// Android notification channel description for completed AI design notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications for when your AI designs are ready.'**
+  String get notificationDesignChannelDescription;
+
+  /// No description provided for @scanPreferencesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Design Brief'**
+  String get scanPreferencesTitle;
+
+  /// No description provided for @scanPreferencesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Room dimensions and optional style choices are sent to the AI backend with your photo.'**
+  String get scanPreferencesSubtitle;
+
+  /// No description provided for @scanRoomWidthLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Wall'**
+  String get scanRoomWidthLabel;
+
+  /// No description provided for @scanRoomDepthLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Depth'**
+  String get scanRoomDepthLabel;
+
+  /// No description provided for @scanCeilingHeightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Ceiling'**
+  String get scanCeilingHeightLabel;
+
+  /// No description provided for @scanCentimetersSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'cm'**
+  String get scanCentimetersSuffix;
+
+  /// No description provided for @scanDesignCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Designs'**
+  String get scanDesignCountLabel;
+
+  /// No description provided for @scanReplaceFurnitureLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace existing furniture'**
+  String get scanReplaceFurnitureLabel;
+
+  /// No description provided for @scanFurnitureTypesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Furniture to include'**
+  String get scanFurnitureTypesLabel;
+
+  /// No description provided for @scanStyleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Style'**
+  String get scanStyleLabel;
+
+  /// No description provided for @scanMaterialLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Material'**
+  String get scanMaterialLabel;
+
+  /// No description provided for @scanColorsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Colors'**
+  String get scanColorsLabel;
+
+  /// No description provided for @scanTemperatureLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood'**
+  String get scanTemperatureLabel;
+
+  /// No description provided for @scanSizeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get scanSizeLabel;
+
+  /// No description provided for @scanExtraPreferencesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get scanExtraPreferencesLabel;
+
+  /// No description provided for @scanExtraPreferencesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget, must-keep pieces, color details...'**
+  String get scanExtraPreferencesHint;
+
+  /// No description provided for @scanFurnitureSofa.
+  ///
+  /// In en, this message translates to:
+  /// **'Sofa'**
+  String get scanFurnitureSofa;
+
+  /// No description provided for @scanFurnitureArmchair.
+  ///
+  /// In en, this message translates to:
+  /// **'Armchair'**
+  String get scanFurnitureArmchair;
+
+  /// No description provided for @scanFurnitureCoffeeTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Coffee table'**
+  String get scanFurnitureCoffeeTable;
+
+  /// No description provided for @scanFurnitureRug.
+  ///
+  /// In en, this message translates to:
+  /// **'Rug'**
+  String get scanFurnitureRug;
+
+  /// No description provided for @scanFurnitureTvUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'TV unit'**
+  String get scanFurnitureTvUnit;
+
+  /// No description provided for @scanFurnitureStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get scanFurnitureStorage;
+
+  /// No description provided for @scanFurnitureLighting.
+  ///
+  /// In en, this message translates to:
+  /// **'Lighting'**
+  String get scanFurnitureLighting;
+
+  /// No description provided for @scanStyleModern.
+  ///
+  /// In en, this message translates to:
+  /// **'Modern'**
+  String get scanStyleModern;
+
+  /// No description provided for @scanStyleScandinavian.
+  ///
+  /// In en, this message translates to:
+  /// **'Scandinavian'**
+  String get scanStyleScandinavian;
+
+  /// No description provided for @scanStyleMinimal.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimal'**
+  String get scanStyleMinimal;
+
+  /// No description provided for @scanStyleClassic.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic'**
+  String get scanStyleClassic;
+
+  /// No description provided for @scanMaterialWood.
+  ///
+  /// In en, this message translates to:
+  /// **'Wood'**
+  String get scanMaterialWood;
+
+  /// No description provided for @scanMaterialFabric.
+  ///
+  /// In en, this message translates to:
+  /// **'Fabric'**
+  String get scanMaterialFabric;
+
+  /// No description provided for @scanMaterialMetal.
+  ///
+  /// In en, this message translates to:
+  /// **'Metal'**
+  String get scanMaterialMetal;
+
+  /// No description provided for @scanMaterialGlass.
+  ///
+  /// In en, this message translates to:
+  /// **'Glass'**
+  String get scanMaterialGlass;
+
+  /// No description provided for @scanColorBeige.
+  ///
+  /// In en, this message translates to:
+  /// **'Beige'**
+  String get scanColorBeige;
+
+  /// No description provided for @scanColorOak.
+  ///
+  /// In en, this message translates to:
+  /// **'Oak'**
+  String get scanColorOak;
+
+  /// No description provided for @scanColorWhite.
+  ///
+  /// In en, this message translates to:
+  /// **'White'**
+  String get scanColorWhite;
+
+  /// No description provided for @scanColorGray.
+  ///
+  /// In en, this message translates to:
+  /// **'Gray'**
+  String get scanColorGray;
+
+  /// No description provided for @scanColorGreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Green'**
+  String get scanColorGreen;
+
+  /// No description provided for @scanTemperatureWarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm'**
+  String get scanTemperatureWarm;
+
+  /// No description provided for @scanTemperatureNeutral.
+  ///
+  /// In en, this message translates to:
+  /// **'Neutral'**
+  String get scanTemperatureNeutral;
+
+  /// No description provided for @scanTemperatureCool.
+  ///
+  /// In en, this message translates to:
+  /// **'Cool'**
+  String get scanTemperatureCool;
+
+  /// No description provided for @scanSizeSmall.
+  ///
+  /// In en, this message translates to:
+  /// **'Small'**
+  String get scanSizeSmall;
+
+  /// No description provided for @scanSizeMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get scanSizeMedium;
+
+  /// No description provided for @scanSizeLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Large'**
+  String get scanSizeLarge;
+
+  /// No description provided for @backendUrlSaveTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Save server URL'**
+  String get backendUrlSaveTooltip;
+
+  /// No description provided for @backendUrlSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Server URL saved.'**
+  String get backendUrlSaved;
+
+  /// No description provided for @profileFirebaseUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Firebase is not configured for this platform yet.'**
+  String get profileFirebaseUnavailable;
+
+  /// No description provided for @profileSignInCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in cancelled.'**
+  String get profileSignInCancelled;
+
+  /// Number of products suggested in a design.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} products suggested'**
+  String designProductCount(int count);
 }
 
 class _AppLocalizationsDelegate

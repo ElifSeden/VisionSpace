@@ -25,6 +25,10 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
 
+  /// Expose the plugin so other services can show notifications.
+  FlutterLocalNotificationsPlugin get localNotificationsPlugin =>
+      _localNotifications;
+
   static const String _prefLocalNotifications = 'pref_local_notifications';
   static const String _prefRemoteNotifications = 'pref_remote_notifications';
 

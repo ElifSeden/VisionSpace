@@ -3,9 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../l10n/app_localizations.dart';
-import '../../services/app_notification_service.dart';
-import '../../services/decorator_ai_api.dart';
-import '../design/design_detail_page.dart';
+import '../../services/ai_backend_client.dart';
+import 'scan_processing_page.dart';
 
 enum _CameraErrorKind {
   notFound,
@@ -15,14 +14,15 @@ enum _CameraErrorKind {
 }
 
 class CameraScanPage extends StatefulWidget {
-  const CameraScanPage({super.key});
+  const CameraScanPage({this.options = const ScanDesignOptions(), super.key});
+
+  final ScanDesignOptions options;
 
   @override
   State<CameraScanPage> createState() => _CameraScanPageState();
 }
 
 class _CameraScanPageState extends State<CameraScanPage> {
-  final DecoratorAiApi _api = FirestoreDecoratorAiApi();
   CameraController? _controller;
   Future<void>? _initializeCamera;
   _CameraErrorKind? _errorKind;
@@ -87,13 +87,14 @@ class _CameraScanPageState extends State<CameraScanPage> {
 
     try {
       final scan = await controller.takePicture();
-      final project = await _api.analyzeSpace(scanId: scan.path);
-      await AppNotificationService.instance.addAiDesignReady();
 
       if (!mounted) return;
       setState(() => _isAnalyzing = false);
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => DesignDetailPage(project: project)),
+        MaterialPageRoute(
+          builder: (_) =>
+              ScanProcessingPage(imagePath: scan.path, options: widget.options),
+        ),
       );
     } catch (_) {
       if (!mounted) return;

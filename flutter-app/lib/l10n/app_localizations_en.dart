@@ -562,4 +562,194 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scanTipCornerPhoto => 'Take the photo from a corner if possible.';
+
+  @override
+  String get scanProcessingTitle => 'Creating Your Design';
+
+  @override
+  String get scanStageAnalyzing => 'Analyzing your room...';
+
+  @override
+  String get scanStageDesigning => 'Creating design strategies...';
+
+  @override
+  String get scanStageSearching => 'Finding matching furniture...';
+
+  @override
+  String get scanStagePlanning => 'Planning furniture layout...';
+
+  @override
+  String get scanStageCompleting => 'Finalizing your design...';
+
+  @override
+  String get scanFailed => 'Design could not be created. Please try again.';
+
+  @override
+  String get scanUploadFailed => 'Room image could not be uploaded.';
+
+  @override
+  String get scanStageRetry => 'Try Again';
+
+  @override
+  String get notificationDesignReady => 'Your AI design is ready!';
+
+  @override
+  String get notificationDesignReadyBody =>
+      'Tap to view your personalized furniture suggestions.';
+
+  @override
+  String get backendUrlLabel => 'Server URL';
+
+  @override
+  String get notificationDesignChannelName => 'Design AI Updates';
+
+  @override
+  String get notificationDesignChannelDescription =>
+      'Notifications for when your AI designs are ready.';
+
+  @override
+  String get scanPreferencesTitle => 'Design Brief';
+
+  @override
+  String get scanPreferencesSubtitle =>
+      'Room dimensions and optional style choices are sent to the AI backend with your photo.';
+
+  @override
+  String get scanRoomWidthLabel => 'Wall';
+
+  @override
+  String get scanRoomDepthLabel => 'Depth';
+
+  @override
+  String get scanCeilingHeightLabel => 'Ceiling';
+
+  @override
+  String get scanCentimetersSuffix => 'cm';
+
+  @override
+  String get scanDesignCountLabel => 'Designs';
+
+  @override
+  String get scanReplaceFurnitureLabel => 'Replace existing furniture';
+
+  @override
+  String get scanFurnitureTypesLabel => 'Furniture to include';
+
+  @override
+  String get scanStyleLabel => 'Style';
+
+  @override
+  String get scanMaterialLabel => 'Material';
+
+  @override
+  String get scanColorsLabel => 'Colors';
+
+  @override
+  String get scanTemperatureLabel => 'Mood';
+
+  @override
+  String get scanSizeLabel => 'Size';
+
+  @override
+  String get scanExtraPreferencesLabel => 'Notes';
+
+  @override
+  String get scanExtraPreferencesHint =>
+      'Budget, must-keep pieces, color details...';
+
+  @override
+  String get scanFurnitureSofa => 'Sofa';
+
+  @override
+  String get scanFurnitureArmchair => 'Armchair';
+
+  @override
+  String get scanFurnitureCoffeeTable => 'Coffee table';
+
+  @override
+  String get scanFurnitureRug => 'Rug';
+
+  @override
+  String get scanFurnitureTvUnit => 'TV unit';
+
+  @override
+  String get scanFurnitureStorage => 'Storage';
+
+  @override
+  String get scanFurnitureLighting => 'Lighting';
+
+  @override
+  String get scanStyleModern => 'Modern';
+
+  @override
+  String get scanStyleScandinavian => 'Scandinavian';
+
+  @override
+  String get scanStyleMinimal => 'Minimal';
+
+  @override
+  String get scanStyleClassic => 'Classic';
+
+  @override
+  String get scanMaterialWood => 'Wood';
+
+  @override
+  String get scanMaterialFabric => 'Fabric';
+
+  @override
+  String get scanMaterialMetal => 'Metal';
+
+  @override
+  String get scanMaterialGlass => 'Glass';
+
+  @override
+  String get scanColorBeige => 'Beige';
+
+  @override
+  String get scanColorOak => 'Oak';
+
+  @override
+  String get scanColorWhite => 'White';
+
+  @override
+  String get scanColorGray => 'Gray';
+
+  @override
+  String get scanColorGreen => 'Green';
+
+  @override
+  String get scanTemperatureWarm => 'Warm';
+
+  @override
+  String get scanTemperatureNeutral => 'Neutral';
+
+  @override
+  String get scanTemperatureCool => 'Cool';
+
+  @override
+  String get scanSizeSmall => 'Small';
+
+  @override
+  String get scanSizeMedium => 'Medium';
+
+  @override
+  String get scanSizeLarge => 'Large';
+
+  @override
+  String get backendUrlSaveTooltip => 'Save server URL';
+
+  @override
+  String get backendUrlSaved => 'Server URL saved.';
+
+  @override
+  String get profileFirebaseUnavailable =>
+      'Firebase is not configured for this platform yet.';
+
+  @override
+  String get profileSignInCancelled => 'Sign-in cancelled.';
+
+  @override
+  String designProductCount(int count) {
+    return '$count products suggested';
+  }
 }

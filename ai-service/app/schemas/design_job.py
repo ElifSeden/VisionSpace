@@ -28,10 +28,12 @@ class ProductCard(BaseModel):
     external_id: str
     name: str
     category: str
+    role: str | None = None
     source_url: str | None = None
     image_path: str | None = None
     price: dict | None = None
     reason: str | None = None
+    score: float | None = None
 
 
 class ClickableRegion(BaseModel):

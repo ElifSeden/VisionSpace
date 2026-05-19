@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import design_jobs, health, products, uploads
 from app.core.config import get_settings
@@ -21,7 +23,15 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url="/openapi.json",
 )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_allow_origins,
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(health.router, tags=["health"])
 app.include_router(uploads.router)
 app.include_router(design_jobs.router)
 app.include_router(products.router)
+app.mount("/images", StaticFiles(directory=settings.local_image_root, check_dir=False), name="images")

@@ -1,11 +1,10 @@
 # VisionSpace AI Service System Design
 
-This service has two main subsystems: `crawler/` collects raw furniture product data, and `preprocessor/` normalizes, enriches, and vectorizes that raw data. The expected data flow is:
+This service has two main subsystems: `crawler/` collects raw furniture product data, and `preprocessor/` normalizes and enriches that raw data. The expected data flow is:
 
 1. Run the Scrapy crawler from `data/scraping.py`, `data/crawler/run.py`, or `data/crawler/run_all.py`.
 2. The crawler writes scraped products to `data/output/products.jsonl` and downloaded images to `data/output/images/`.
 3. Run `data/preprocessor/run.py` or `data/preprocessor/enrich_products.py` to transform raw products into normalized enriched product records.
-4. Optionally run `data/preprocessor/build_vectors.py` to attach deterministic semantic vectors to enriched records.
 
 ## Crawler Design
 
@@ -41,7 +40,7 @@ The crawler is a Scrapy project flattened into the `crawler/` directory. There i
 - Descriptive data: `description`, `category`, optional `attributes`, optional `breadcrumbs`.
 - Image data: `image_urls`, `images`, `image_paths`.
 
-Spiders should fill as much raw product information as possible and leave taxonomy normalization, dimensions, semantic captions, and vector preparation to preprocessing. `category` is the selected accepted crawler category such as `kitchen` or `living_room`; breadcrumbs may be recorded for raw traceability but must not drive category acceptance or preprocessor enrichment.
+Spiders should fill as much raw product information as possible and leave taxonomy normalization, dimensions, and semantic captions to preprocessing. `category` is the selected accepted crawler category such as `kitchen` or `living_room`; breadcrumbs may be recorded for raw traceability but must not drive category acceptance or preprocessor enrichment.
 
 
 ### Raw Product JSON Schema
@@ -309,7 +308,7 @@ Preprocessing/enrichment logic should not be added to `crawler/pipelines.py`; it
 
 ## Preprocessor Design
 
-The `preprocessor/` package owns all enrichment, AI calling, schema normalization, and vector preparation.
+The `preprocessor/` package owns enrichment, AI calling, and schema normalization.
 
 ### Package Layout
 
@@ -319,7 +318,6 @@ The `preprocessor/` package owns all enrichment, AI calling, schema normalizatio
 - `preprocessor/crawler_pipelines.py`: legacy Scrapy-compatible preprocessing pipeline; not enabled by current crawler settings.
 - `preprocessor/vertex_ai.py`: Shared Vertex AI REST client.
 - `preprocessor/labeler.py`: Image-aware product labeler backed by Vertex AI.
-- `preprocessor/build_vectors.py`: Deterministic semantic vector builder.
 
 ### Data Model
 
@@ -412,15 +410,9 @@ The labeler returns a compact `FurnitureAttributes` schema local to `labeler.py`
 
 The crawler does not run preprocessor enrichment during normal crawls. `crawler/settings.py` only enables crawler-native duplicate filtering, image downloading, and JSONL export. Raw crawler output should keep source values intact, including selected source category and optional breadcrumbs when present.
 
-`preprocessor/crawler_pipelines.py` remains as a legacy Scrapy-compatible pipeline, but it is not imported by current crawler settings. Rich schema enrichment, taxonomy normalization, dimensions, semantic captions, Vertex calls, and vector preparation happen after crawling through `preprocessor/enrich_products.py` and `preprocessor/build_vectors.py`.
+`preprocessor/crawler_pipelines.py` remains as a legacy Scrapy-compatible pipeline, but it is not imported by current crawler settings. Rich schema enrichment, taxonomy normalization, dimensions, semantic captions, and Vertex enrichment calls happen after crawling through `preprocessor/enrich_products.py`.
 
-### Vector Builder
-
-`preprocessor/build_vectors.py` reads enriched products and writes `vectors.semantic_vector`.
-
-Current behavior is deterministic placeholder vectors generated from a SHA-256 seeded NumPy RNG. This avoids using a Gemini API key or a non-Vertex embedding endpoint. The vector text comes from `semantic_text` captions, falling back to product name and description.
-
-If real Vertex embeddings are added later, implement them behind `EmbeddingProvider` without changing downstream file shape.
+Product embeddings are intentionally not built in the data preprocessor. `ai-service` imports `enriched_products.jsonl`, generates Vertex text/image embeddings, and writes the active Qdrant vectors during backend indexing.
 
 ## Environment and Auth Expectations
 
@@ -436,7 +428,7 @@ No `GEMINI_API_KEY` is used. Authentication is provided by Google Application De
 ## Operational Notes for AI Agents
 
 - Keep crawler source-specific parsing in `crawler/spiders/` or `crawler/extractors/`.
-- Keep schema enrichment, AI prompts, Vertex calls, and vector preparation in `preprocessor/`.
+- Keep schema enrichment, AI prompts, and Vertex enrichment calls in `preprocessor/`.
 - Do not reintroduce direct Vertex HTTP calls outside `preprocessor/vertex_ai.py`.
 - Do not add API-key based Gemini calls. This project uses Vertex AI with ADC.
 - Preserve JSONL as the boundary between crawler and preprocessor.

@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:decorator_ai/core/config/backend_config.dart';
 import 'package:decorator_ai/features/notifications/notifications_page.dart';
 import 'package:decorator_ai/features/onboarding/onboarding_flow_page.dart';
 import 'package:decorator_ai/features/product/product_detail_page.dart';
@@ -9,11 +12,91 @@ import 'package:decorator_ai/features/scan/scan_page.dart';
 import 'package:decorator_ai/main.dart';
 import 'package:decorator_ai/l10n/app_localizations.dart';
 import 'package:decorator_ai/models/design_project.dart';
+import 'package:decorator_ai/models/product_spot.dart';
 import 'package:decorator_ai/navigation/app_shell.dart';
 import 'package:decorator_ai/services/app_notification_service.dart';
+import 'package:decorator_ai/services/ai_backend_client.dart';
 import 'package:decorator_ai/services/decorator_ai_api.dart';
 
 void main() {
+  test('scan design options serialize backend request fields', () {
+    const options = ScanDesignOptions(
+      currentWallLengthCm: 420,
+      roomDepthCm: 360,
+      ceilingHeightCm: 275,
+      replaceExistingFurniture: true,
+      requestedFurnitureTypes: ['sofa', 'coffee_table'],
+      designStyle: 'scandinavian',
+      material: 'wood',
+      colors: ['beige', 'oak'],
+      temperature: 'warm',
+      size: 'medium',
+      extraPreferences: 'Keep the reading chair.',
+      designCount: 3,
+    );
+
+    expect(options.roomDimensions['current_wall_length_cm'], 420);
+    expect(options.roomDimensions['room_depth_cm'], 360);
+    expect(options.preferences['mode'], 'guided_design');
+    expect(options.preferences['replace_existing_furniture'], isTrue);
+    expect(options.preferences['requested_furniture_types'], [
+      'sofa',
+      'coffee_table',
+    ]);
+    expect(options.preferences['design_style'], 'scandinavian');
+    expect(options.preferences['material'], 'wood');
+    expect(options.preferences['colors'], ['beige', 'oak']);
+    expect(options.designCount, 3);
+  });
+
+  test('backend config normalizes and persists server URLs', () async {
+    SharedPreferences.setMockInitialValues({});
+
+    await BackendConfig.instance.load();
+    expect(
+      BackendConfig.instance.baseUrl,
+      anyOf('http://localhost:8000', 'http://10.0.2.2:8000'),
+    );
+
+    await BackendConfig.instance.setBaseUrl('api.example.com/');
+    expect(BackendConfig.instance.baseUrl, 'http://api.example.com');
+
+    await BackendConfig.instance.setBaseUrl('https://api.example.com/v1/');
+    expect(BackendConfig.instance.baseUrl, 'https://api.example.com/v1');
+  });
+
+  test('backend product mapping normalizes score and image paths', () {
+    final product = ProductSpot.fromBackendJson(
+      const {
+        'product_id': 'p1',
+        'name': 'Oak Coffee Table',
+        'role': 'coffee_table',
+        'score': 0.91,
+        'image_path': 'products/oak/main.jpg',
+        'source_url': 'https://store.example/item',
+        'price': {'amount': 1250, 'currency': 'TL'},
+      },
+      polygon: const [
+        [100, 100],
+        [300, 100],
+        [300, 300],
+        [100, 300],
+      ],
+      imageWidth: 400,
+      imageHeight: 400,
+      imageUrlBuilder: (path) => 'http://localhost:8000/images/$path',
+    );
+
+    expect(product.matchScore, 91);
+    expect(product.left, 0.5);
+    expect(product.top, 0.5);
+    expect(
+      product.imageUrl,
+      'http://localhost:8000/images/products/oak/main.jpg',
+    );
+    expect(product.buyUrl, 'https://store.example/item');
+  });
+
   testWidgets('decorator_ai welcome screen loads', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({});
 
@@ -38,7 +121,7 @@ void main() {
     await tester.pump();
     final l10n = await AppLocalizations.delegate.load(const Locale('en'));
 
-    expect(find.text('Scan Your Room'), findsOneWidget);
+    expect(find.text(l10n.scanYourRoom), findsOneWidget);
     expect(find.text(l10n.welcomeStartScan), findsNothing);
   });
 
@@ -64,7 +147,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
 
       final prefs = await SharedPreferences.getInstance();
-      expect(find.text('Scan Your Room'), findsOneWidget);
+      expect(find.text(l10n.scanYourRoom), findsOneWidget);
       expect(prefs.getBool(AppShell.enteredAppKey), isTrue);
       expect(prefs.getInt(AppShell.selectedTabKey), 1);
     },
@@ -176,13 +259,68 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('Start Scan'), findsOneWidget);
+    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
 
-    await tester.tap(find.text('Start Scan'));
+    expect(find.text(l10n.startScan), findsOneWidget);
+
+    await tester.tap(find.text(l10n.startScan));
     await tester.pump();
 
     expect(find.byType(ScanPage), findsOneWidget);
-    expect(find.text('Scan Your Room'), findsOneWidget);
+    expect(find.text(l10n.scanYourRoom), findsOneWidget);
+  });
+
+  testWidgets('scan page exposes backend design brief controls', (
+    WidgetTester tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: ScanPage()),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text(l10n.scanPreferencesTitle), findsOneWidget);
+    expect(find.text(l10n.scanRoomWidthLabel), findsOneWidget);
+    expect(find.text(l10n.scanReplaceFurnitureLabel), findsOneWidget);
+
+    final sofaFinder = find.widgetWithText(FilterChip, l10n.scanFurnitureSofa);
+    await tester.ensureVisible(sofaFinder);
+    await tester.pumpAndSettle();
+    await tester.tap(sofaFinder);
+    await tester.pump();
+
+    final styleFinder = find.widgetWithText(
+      ChoiceChip,
+      l10n.scanStyleScandinavian,
+    );
+    await tester.ensureVisible(styleFinder);
+    await tester.pumpAndSettle();
+    await tester.tap(styleFinder);
+    await tester.pump();
+
+    final notesFinder = find.widgetWithText(
+      TextField,
+      l10n.scanExtraPreferencesLabel,
+    );
+    await tester.ensureVisible(notesFinder);
+    await tester.pumpAndSettle();
+    await tester.enterText(notesFinder, 'Prefer oak and a medium budget');
+    await tester.pump();
+
+    final sofaChip = tester.widget<FilterChip>(
+      find.widgetWithText(FilterChip, l10n.scanFurnitureSofa),
+    );
+    final styleChip = tester.widget<ChoiceChip>(
+      find.widgetWithText(ChoiceChip, l10n.scanStyleScandinavian),
+    );
+    expect(sofaChip.selected, isTrue);
+    expect(styleChip.selected, isTrue);
   });
 
   testWidgets('tapping example furniture card opens product detail', (
@@ -236,6 +374,7 @@ void main() {
       expect(find.text(l10n.profileSettingAuthReminders), findsOneWidget);
       expect(find.text(l10n.profileSettingAiUpdates), findsOneWidget);
       expect(find.text(l10n.profileSettingLanguage), findsOneWidget);
+      expect(find.text(l10n.backendUrlLabel), findsOneWidget);
       expect(find.text('🇺🇸'), findsOneWidget);
     },
   );
@@ -293,9 +432,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Notifications'), findsOneWidget);
-    expect(find.text('New AI Design Ready'), findsOneWidget);
-    expect(find.text('Added to Favorites'), findsOneWidget);
+    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+
+    expect(find.text(l10n.notificationsTitle), findsOneWidget);
+    expect(find.text(l10n.newAiDesignReady), findsOneWidget);
+    expect(find.text(l10n.addedToFavorites), findsOneWidget);
   });
 }
 
@@ -309,6 +450,15 @@ class _ImmediateApi implements DecoratorAiApi {
 
   @override
   Future<DesignProject> analyzeSpace({required String scanId}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<DesignProject> submitAndPollScan({
+    required File imageFile,
+    ScanDesignOptions options = const ScanDesignOptions(),
+    void Function(DesignJobResult)? onProgress,
+  }) {
     throw UnimplementedError();
   }
 }
