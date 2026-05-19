@@ -127,6 +127,8 @@ The backend architecture is split:
 
 `FirestoreDecoratorAiApi` reads published design projects from Firestore and falls back to `MockDecoratorAiApi` when Firestore is unavailable or empty. `GeneratedDesignsRepository` reads authenticated-user generated design suggestions from `generatedDesigns` for the Favorites screen and notification deep links. `BackendDecoratorAiApi` uploads captured room photos to `POST /uploads/room-image`, creates jobs with `POST /design-jobs`, polls `GET /design-jobs/{job_id}`, maps backend designs/products into `DesignProject` and `ProductSpot`, and resolves relative backend image paths through `/images/...`.
 
+Firestore collections use the Firebase default Firestore database, shown as `default` in the console and addressed by Firebase APIs as `(default)`. Do not configure the Flutter client with a named `databaseId: 'default'`; use `FirebaseFirestore.instance` for the real default database.
+
 Firestore collections:
 
 - `designProjects/{projectId}`: curated room/design cards shown on Home and Design Detail.

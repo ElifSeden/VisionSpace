@@ -15,16 +15,6 @@
       ]
     },
     {
-      "collectionGroup": "products",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "sortOrder",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
       "collectionGroup": "generatedDesigns",
       "queryScope": "COLLECTION",
       "fields": [

@@ -606,7 +606,7 @@ dart pub global activate flutterfire_cli
 
 Firebase projesinde şunları açın:
 
-- Firestore Database
+- Firestore Database (`default` olarak görünen Firebase varsayılan veritabanı; API tarafında `(default)` olarak adreslenir)
 - Authentication > Google provider
 - Authentication > Anonymous provider (misafir kullanıcının AI tasarımlarını `generatedDesigns` altında saklamak için)
 - Cloud Messaging
@@ -618,7 +618,7 @@ cd ../flutter-app
 flutterfire configure
 ```
 
-Bu işlem `lib/firebase_options.dart` dosyasını üretir veya günceller.
+Bu işlem `lib/firebase_options.dart` dosyasını üretir veya günceller. Flutter istemcisi varsayılan Firestore veritabanına `FirebaseFirestore.instance` ile bağlanır; ayrıca `databaseId: 'default'` verilmemelidir.
 
 Firestore rules ve indexes deploy etmek için:
 

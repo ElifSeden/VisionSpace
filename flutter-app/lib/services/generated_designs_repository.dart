@@ -14,11 +14,7 @@ class GeneratedDesignsRepository {
 
   static FirebaseFirestore? _defaultFirestore() {
     if (Firebase.apps.isEmpty) return null;
-
-    return FirebaseFirestore.instanceFor(
-      app: Firebase.app(),
-      databaseId: 'default',
-    );
+    return FirebaseFirestore.instance;
   }
 
   Future<List<DesignProject>> fetchGeneratedDesigns() async {
