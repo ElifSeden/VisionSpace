@@ -13,8 +13,29 @@ def test_storage_resolves_root_relative_paths(tmp_path: Path) -> None:
     )
     storage = LocalImageStorage(settings)
 
-    assert storage.resolve_room_image("rooms/2026/05/input.jpeg") == (tmp_path / "images" / "rooms" / "2026" / "05" / "input.jpeg").resolve()
-    assert storage.resolve_product_image("products/source/item/main.jpg") == (tmp_path / "images" / "products" / "source" / "item" / "main.jpg").resolve()
+    assert storage.resolve_room_image("rooms/2026/05/input.jpeg") == (
+        tmp_path / "images" / "rooms" / "2026" / "05" / "input.jpeg"
+    ).resolve()
+    assert storage.resolve_product_image("products/source/item/main.jpg") == (
+        tmp_path / "images" / "products" / "source" / "item" / "main.jpg"
+    ).resolve()
+
+
+def test_storage_creates_configured_directories(tmp_path: Path) -> None:
+    root = tmp_path / "images"
+    settings = Settings(
+        local_image_root=root,
+        room_upload_dir=root / "rooms",
+        product_image_dir=root / "products",
+        generated_image_dir=root / "generated",
+    )
+
+    LocalImageStorage(settings)
+
+    assert root.is_dir()
+    assert (root / "rooms").is_dir()
+    assert (root / "products").is_dir()
+    assert (root / "generated").is_dir()
 
 
 def test_storage_rejects_traversal(tmp_path: Path) -> None:

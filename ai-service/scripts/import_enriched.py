@@ -51,14 +51,22 @@ def map_enriched_to_db(record: dict) -> dict:
         if r.get("room") and r["room"] != "unknown"
     ]
 
-    # Image URLs as ProductImage records (remote type)
+    # Prefer crawler-downloaded local image paths. Remote URLs are retained only
+    # as a fallback for older records that do not include local image metadata.
+    local_image_sources = record.get("local_image_paths") or record.get("image_paths")
+    image_sources = local_image_sources or record.get("image_urls") or []
+    image_type = "local" if local_image_sources else "remote"
     images = []
-    for idx, url in enumerate(record.get("image_urls") or []):
+    seen_images = set()
+    for source in image_sources:
+        if not source or source in seen_images:
+            continue
+        seen_images.add(source)
         images.append({
-            "relative_path": url,
-            "image_type": "remote",
-            "is_primary": idx == 0,
-            "sort_order": idx,
+            "relative_path": source,
+            "image_type": image_type,
+            "is_primary": len(images) == 0,
+            "sort_order": len(images),
         })
 
     # Build confidence map

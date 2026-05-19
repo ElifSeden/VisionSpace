@@ -24,6 +24,7 @@ VERTEX_PROJECT_ID=your-gcp-project-id   # required
 VERTEX_MODEL_ID=gemini-3-flash-preview   # light tasks
 VERTEX_PRO_MODEL_ID=gemini-3.1-pro-preview  # heavy reasoning
 VERTEX_MULTIMODAL_LOCATION=us-central1   # region for image embeddings
+PRODUCT_EMBEDDING_IMAGE_ROOT=/data/pipeline/output/images  # local product image root
 ```
 
 Change `POSTGRES_PASSWORD` if deploying to a server.
@@ -52,11 +53,17 @@ make setup
 ```
 
 This single command:
-1. Builds and starts all containers (API, worker, PostgreSQL, Redis, Qdrant, Adminer)
-2. Runs database migrations (Alembic)
+1. Builds and starts all containers (API, migration job, worker, PostgreSQL, Redis, Qdrant, Adminer)
+2. Runs database migrations (Alembic) through the Compose `migrate` service before API/worker startup
 3. Creates the Qdrant vector collection with **dual named vectors**:
    - `text` (768-dim) for semantic text search
    - `image` (1408-dim) for visual similarity search
+
+If an existing server database is reachable but tables such as `design_jobs` are missing, run the migration job once:
+
+```bash
+docker compose run --rm migrate
+```
 
 ---
 
@@ -86,11 +93,11 @@ make index-products
 
 This step:
 1. Embeds all products' **semantic text** using `text-embedding-005` (768-dim vectors)
-2. Downloads each product's **primary image** from its URL
-3. Embeds each product image using `multimodalembedding@001` (1408-dim vectors)
+2. Reads each product's **primary image** from the local crawler image path under `PRODUCT_EMBEDDING_IMAGE_ROOT`
+3. Uploads the image bytes directly to `multimodalembedding@001` (1408-dim vectors)
 4. Upserts both vectors as named vectors into Qdrant
 
-> **Note**: Image embedding downloads product photos from their source URLs. This requires internet access from the container. Products without downloadable images get a fallback vector.
+> **Note**: The default Compose mount maps `../data/output/images` to `/data/pipeline/output/images`. Products without readable local images get a fallback vector.
 
 ---
 

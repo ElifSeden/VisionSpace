@@ -1,6 +1,6 @@
-.PHONY: up down logs migrate makemigration worker test lint import-products import-enriched index-products create-qdrant setup
+.PHONY: up down logs migrate makemigration worker test lint import-products import-enriched index-products create-qdrant prepare-docker-dirs setup
 
-up:
+up: prepare-docker-dirs
 	docker compose up -d --build
 
 down:
@@ -36,10 +36,13 @@ index-products:
 create-qdrant:
 	docker compose run --rm api python scripts/create_qdrant_collections.py
 
-# Full setup: start services, run migrations, create Qdrant collection
+prepare-docker-dirs:
+	mkdir -p data/images/products data/images/rooms data/images/generated
+	chmod -R u+rwX,go+rwX data/images
+
+# Full setup: start services, run migrations through Compose, create Qdrant collection
 setup: up
 	@echo "Waiting for services to start..."
 	@sleep 5
-	$(MAKE) migrate
 	$(MAKE) create-qdrant
 	@echo "Setup complete. Import products with: make import-enriched file=<path>"

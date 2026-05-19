@@ -33,6 +33,7 @@ class Settings(BaseSettings):
 
     local_image_root: Path = Field(default=Path("/data/images"))
     product_image_dir: Path = Field(default=Path("/data/images/products"))
+    product_embedding_image_root: Path = Field(default=Path("/data/pipeline/output/images"))
     room_upload_dir: Path = Field(default=Path("/data/images/rooms"))
     generated_image_dir: Path = Field(default=Path("/data/images/generated"))
 

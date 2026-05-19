@@ -5,10 +5,12 @@ from fastapi.staticfiles import StaticFiles
 from app.api.routes import design_jobs, health, products, uploads
 from app.core.config import get_settings
 from app.core.logging import configure_logging
+from app.storage.local_storage import LocalImageStorage
 
 configure_logging()
 
 settings = get_settings()
+LocalImageStorage(settings)
 
 app = FastAPI(
     title="VisionSpace AI Service",

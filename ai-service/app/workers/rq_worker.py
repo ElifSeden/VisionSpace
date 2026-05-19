@@ -2,6 +2,7 @@ from redis import Redis
 from rq import Queue, Worker
 
 from app.core.config import get_settings
+from app.storage.local_storage import LocalImageStorage
 
 QUEUE_NAME = "design_jobs"
 
@@ -11,7 +12,9 @@ def get_queue() -> Queue:
 
 
 def main() -> None:
-    worker = Worker([get_queue()], connection=Redis.from_url(get_settings().redis_url))
+    settings = get_settings()
+    LocalImageStorage(settings)
+    worker = Worker([get_queue()], connection=Redis.from_url(settings.redis_url))
     worker.work()
 
 

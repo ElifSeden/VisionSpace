@@ -19,6 +19,21 @@ ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
 class LocalImageStorage:
     def __init__(self, settings: Settings | None = None):
         self.settings = settings or get_settings()
+        self.ensure_directories()
+
+    def ensure_directories(self) -> None:
+        for directory in (
+            self.settings.local_image_root,
+            self.settings.room_upload_dir,
+            self.settings.product_image_dir,
+            self.settings.generated_image_dir,
+        ):
+            try:
+                directory.mkdir(parents=True, exist_ok=True)
+            except OSError as exc:
+                raise ImageStorageError(
+                    f"Image storage directory is not writable: {directory}"
+                ) from exc
 
     def _safe_relative(self, relative_path: str) -> Path:
         path = Path(relative_path)
@@ -63,8 +78,13 @@ class LocalImageStorage:
             relative = absolute.resolve().relative_to(self.settings.local_image_root.resolve())
         except ValueError:
             relative = dated_relative
-        absolute.parent.mkdir(parents=True, exist_ok=True)
-        absolute.write_bytes(data)
+        try:
+            absolute.parent.mkdir(parents=True, exist_ok=True)
+            absolute.write_bytes(data)
+        except OSError as exc:
+            raise ImageStorageError(
+                f"Unable to write uploaded image under {self.settings.room_upload_dir}"
+            ) from exc
 
         try:
             with Image.open(absolute) as image:

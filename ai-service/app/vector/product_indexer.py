@@ -1,7 +1,8 @@
 import time
+from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 import structlog
-import requests as http_requests
 from qdrant_client.http import models
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
@@ -14,7 +15,8 @@ from app.vector.qdrant import get_qdrant_client
 logger = structlog.get_logger(__name__)
 
 EMBEDDING_BATCH_SIZE = 50
-IMAGE_DOWNLOAD_TIMEOUT = 15
+MIN_IMAGE_BYTES = 1000
+MAX_IMAGE_BYTES = 10 * 1024 * 1024
 
 
 def build_embedding_text(product: Product) -> str:
@@ -83,34 +85,81 @@ def _build_payload(product: Product, text: str) -> dict:
         "is_group": product.is_group,
         "is_active": product.is_active,
         "embedding_text": text,
-        "primary_image_url": primary.relative_path if primary else None,
+        "primary_image_path": primary.relative_path if primary else None,
     }
 
 
-def _get_primary_image_url(product: Product) -> str | None:
-    """Get the primary image URL for a product."""
-    primary = next(
-        (img for img in product.images if img.is_primary),
-        product.images[0] if product.images else None,
+def _ordered_product_images(product: Product):
+    return sorted(
+        product.images,
+        key=lambda img: (not bool(img.is_primary), getattr(img, "sort_order", 0) or 0),
     )
-    if primary and primary.relative_path.startswith("http"):
-        return primary.relative_path
-    return None
 
 
-def _download_image(url: str) -> bytes | None:
-    """Download an image from URL, returning raw bytes or None on failure."""
-    try:
-        resp = http_requests.get(url, timeout=IMAGE_DOWNLOAD_TIMEOUT, stream=True)
-        if resp.status_code != 200:
-            return None
-        data = resp.content
-        # Skip images that are too small (likely broken) or too large
-        if len(data) < 1000 or len(data) > 10 * 1024 * 1024:
-            return None
-        return data
-    except Exception:
+def _relative_from_source_url(product: Product, source: str) -> str | None:
+    """Map a previously imported remote URL to the crawler image path convention."""
+    parsed = urlparse(source)
+    filename = Path(unquote(parsed.path)).name
+    if not filename or not product.external_id:
         return None
+    return f"products/{product.external_id}/{filename}"
+
+
+def _candidate_relative_image_paths(product: Product) -> list[str]:
+    candidates = []
+    seen = set()
+    for image in _ordered_product_images(product):
+        relative_path = image.relative_path.strip()
+        if relative_path.startswith(("http://", "https://")):
+            candidate = _relative_from_source_url(product, relative_path)
+        else:
+            candidate = relative_path
+        if candidate and candidate not in seen:
+            candidates.append(candidate)
+            seen.add(candidate)
+    return candidates
+
+
+def _safe_relative_path(relative_path: str) -> Path | None:
+    path = Path(relative_path)
+    if path.is_absolute() or ".." in path.parts:
+        return None
+    return path
+
+
+def _candidate_absolute_image_paths(relative_path: str, settings) -> list[Path]:
+    path = _safe_relative_path(relative_path)
+    if path is None:
+        return []
+
+    roots = [settings.product_embedding_image_root, settings.local_image_root]
+    if path.parts and path.parts[0] == "products":
+        roots.append(settings.product_image_dir.parent)
+    else:
+        roots.append(settings.product_image_dir)
+
+    candidates = []
+    seen = set()
+    for root in roots:
+        absolute = (root / path).resolve()
+        if absolute not in seen:
+            candidates.append(absolute)
+            seen.add(absolute)
+    return candidates
+
+
+def _read_image_bytes(product: Product, settings) -> tuple[bytes | None, Path | None]:
+    for relative_path in _candidate_relative_image_paths(product):
+        for absolute_path in _candidate_absolute_image_paths(relative_path, settings):
+            try:
+                if not absolute_path.is_file():
+                    continue
+                data = absolute_path.read_bytes()
+            except OSError:
+                continue
+            if MIN_IMAGE_BYTES <= len(data) <= MAX_IMAGE_BYTES:
+                return data, absolute_path
+    return None, None
 
 
 def index_products(db: Session, include_inactive: bool = False) -> int:
@@ -138,7 +187,11 @@ def index_products(db: Session, include_inactive: bool = False) -> int:
     # --- Text vectors (768-dim via text-embedding-005) ---
     use_vertex = bool(settings.vertex_project_id)
     if use_vertex:
-        logger.info("embedding_text_with_vertex_ai", model=settings.vertex_embedding_model, count=len(texts))
+        logger.info(
+            "embedding_text_with_vertex_ai",
+            model=settings.vertex_embedding_model,
+            count=len(texts),
+        )
         text_vectors = _vertex_embed_text_batch(texts, settings)
     else:
         logger.info("embedding_text_with_deterministic_fallback", count=len(texts))
@@ -146,7 +199,11 @@ def index_products(db: Session, include_inactive: bool = False) -> int:
 
     # --- Image vectors (1408-dim via multimodalembedding@001) ---
     if use_vertex:
-        logger.info("embedding_images_with_multimodal", model=settings.vertex_multimodal_model, count=len(products))
+        logger.info(
+            "embedding_images_with_multimodal",
+            model=settings.vertex_multimodal_model,
+            count=len(products),
+        )
         image_vectors = _embed_product_images(products, settings)
     else:
         logger.info("embedding_images_with_deterministic_fallback", count=len(products))
@@ -163,7 +220,9 @@ def index_products(db: Session, include_inactive: bool = False) -> int:
                 id=str(product.id),
                 vector={
                     "text": text_vec,
-                    "image": image_vec if image_vec else deterministic_vector(text, settings.qdrant_image_vector_size),
+                    "image": image_vec
+                    if image_vec
+                    else deterministic_vector(text, settings.qdrant_image_vector_size),
                 },
                 payload=_build_payload(product, text),
             )
@@ -202,10 +261,10 @@ def _vertex_embed_text_batch(texts: list[str], settings) -> list[list[float]]:
 
 
 def _embed_product_images(products: list[Product], settings) -> list[list[float] | None]:
-    """Download and embed primary product images using multimodal model.
+    """Embed primary product images from local crawler image files.
 
     Returns a list parallel to `products`. Each entry is either a 1408-dim
-    vector or None if the image could not be downloaded or embedded.
+    vector or None if no readable local image file could be found or embedded.
     """
     from app.ai.vertex_client import VertexAIClient
 
@@ -213,14 +272,13 @@ def _embed_product_images(products: list[Product], settings) -> list[list[float]
     results: list[list[float] | None] = []
 
     for i, product in enumerate(products):
-        url = _get_primary_image_url(product)
-        if not url:
-            results.append(None)
-            continue
-
-        image_bytes = _download_image(url)
+        image_bytes, image_path = _read_image_bytes(product, settings)
         if not image_bytes:
-            logger.warning("image_download_failed", product_id=str(product.id), url=url[:80])
+            logger.warning(
+                "product_image_file_missing",
+                product_id=str(product.id),
+                image_paths=_candidate_relative_image_paths(product),
+            )
             results.append(None)
             continue
 
@@ -231,7 +289,12 @@ def _embed_product_images(products: list[Product], settings) -> list[list[float]
             )
             results.append(vector)
         except Exception as exc:
-            logger.warning("image_embed_failed", product_id=str(product.id), error=str(exc))
+            logger.warning(
+                "image_embed_failed",
+                product_id=str(product.id),
+                image_path=str(image_path),
+                error=str(exc),
+            )
             results.append(None)
 
         if (i + 1) % 20 == 0:

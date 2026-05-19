@@ -16,7 +16,7 @@ Tipik çalışma akışı şöyledir:
 1. `data/crawler` kaynak mağazalardan ham ürünleri toplar.
 2. Ham kayıtlar `data/output/products.jsonl` dosyasına, görseller `data/output/images/` altına yazılır.
 3. `data/preprocessor` ürünleri normalize eder, Vertex AI ile ya da deterministik fallback ile etiketler, semantik açıklamalar üretir.
-4. Hazırlanan ürünler `ai-service` içine import edilir.
+4. Hazırlanan ürünler `ai-service` içine import edilir; ürün görselleri crawler'ın yazdığı local `data/output/images` yolları ile taşınır.
 5. `ai-service` PostgreSQL'i kaynak gerçeklik, Qdrant'ı vektör arama, Redis/RQ'yu arka plan iş kuyruğu olarak kullanır.
 6. Flutter uygulaması oda fotoğrafı ve tasarım tercihlerini `ai-service` backend'ine gönderir.
 7. Backend iş akışı oda analizini, tasarım stratejisini, ürün aramasını, yerleşim planını ve sonucu kalıcılaştırmayı arka planda yapar.
@@ -138,6 +138,7 @@ Tipik dosyalar:
 `ai-service/docker-compose.yml` şu servisleri ayağa kaldırır:
 
 - `api`: FastAPI uygulaması, port `8000`.
+- `migrate`: PostgreSQL hazır olduktan sonra `alembic upgrade head` çalıştıran tek seferlik migrasyon servisi.
 - `worker`: RQ worker, tasarım job'larını çalıştırır.
 - `postgres`: Kalıcı ürün ve tasarım veritabanı, port `5432`.
 - `redis`: RQ queue ve state/caching altyapısı, port `6379`.
@@ -463,6 +464,14 @@ GENERATED_IMAGE_DIR=/data/images/generated
 GOOGLE_APPLICATION_CREDENTIALS=/secrets/gcp-service-account.json
 ```
 
+Varsayılan Docker kurulumunda `/data/images`, host tarafındaki `ai-service/data/images` dizinine bağlanır. Sunucuya taşırken bu dizinleri container başlamadan önce oluşturun ve container'ın yazabildiğinden emin olun:
+
+```bash
+mkdir -p ai-service/data/images/products ai-service/data/images/rooms ai-service/data/images/generated
+```
+
+Eğer projeyi farklı bir host dizinine koyduysanız sorun değildir; önemli olan compose bind mount'unun gerçek host yolunu göstermesi ve `.env` içindeki dört image path değerinin aynı container kökü (`/data/images`) altında kalmasıdır.
+
 Service account key dosyasını yerleştirin:
 
 ```bash
@@ -479,8 +488,15 @@ make setup
 Bu komut şunları yapar:
 
 1. Docker container'larını build eder ve başlatır.
-2. Alembic migrasyonlarını çalıştırır.
+2. Compose `migrate` servisiyle Alembic migrasyonlarını çalıştırır.
 3. Qdrant collection oluşturur.
+
+`docker compose up -d --build` artık PostgreSQL healthcheck'ini bekler, `migrate` servisiyle Alembic migrasyonlarını çalıştırır ve ardından API/worker container'larını başlatır. Mevcut bir sunucuda tablo eksikliği görürseniz tek seferlik düzeltme için şunu çalıştırabilirsiniz:
+
+```bash
+cd ai-service
+docker compose run --rm migrate
+```
 
 Backend'i kontrol edin:
 
