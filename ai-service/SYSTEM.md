@@ -341,7 +341,7 @@ For each product, two vectors are created:
 
 1. **Text vector** (768-dim): Embedded from semantic_text captions (aesthetic + functional + material + attribute). These captions are rich, multi-sentence descriptions that capture the product's character. The `text-embedding-005` model handles up to 2048 tokens, so full captions are used.
 
-2. **Image vector** (1408-dim): The product's primary image URL is downloaded and embedded via `multimodalembedding@001`. This captures the visual appearance — colors, textures, shapes, style — in a shared text-image embedding space. Products without downloadable images get a deterministic fallback vector.
+2. **Image vector** (1408-dim): The product's primary local image file is read from `PRODUCT_EMBEDDING_IMAGE_ROOT` (default `/data/pipeline/output/images`) and uploaded inline to `multimodalembedding@001`. This captures the visual appearance — colors, textures, shapes, style — in a shared text-image embedding space without depending on source-store image URLs. Products without readable local images get a deterministic fallback vector.
 
 Both vectors are upserted as named vectors in a single Qdrant point, along with a rich payload of filterable attributes.
 
@@ -422,11 +422,14 @@ Clients poll `GET /design-jobs/{job_id}` until `status` becomes `"completed"` or
 | Service | Image | Purpose | Ports |
 |---|---|---|---|
 | `api` | Custom (Dockerfile) | FastAPI server | 8000 |
+| `migrate` | Custom (Dockerfile) | One-shot Alembic schema migration | — |
 | `worker` | Custom (Dockerfile) | RQ background worker | — |
 | `postgres` | postgres:16 | Relational database | 5432 |
 | `redis` | redis:7 | Task queue broker | 6379 |
 | `qdrant` | qdrant/qdrant:latest | Vector database | 6333, 6334 |
 | `adminer` | adminer:latest | DB admin UI | 8080 |
+
+Compose orders database startup through the `migrate` service: PostgreSQL must pass `pg_isready`, `alembic upgrade head` must complete successfully, and only then do the API and worker start. This prevents request handlers from writing to missing tables such as `design_jobs` after a fresh server deployment. Manual migrations are still available with `make migrate` when needed.
 
 ### Volume Mounts
 
@@ -435,15 +438,11 @@ Clients poll `GET /design-jobs/{job_id}` until `status` becomes `"completed"` or
 | `./` | `/app` | Application code (hot reload) |
 | `./data/images` | `/data/images` | Product + room + generated images |
 | `./secrets` | `/secrets:ro` | GCP service account key |
-| `../data` | `/data/pipeline:ro` | Preprocessor output (enriched_products.jsonl) |
+| `../data` | `/data/pipeline:ro` | Preprocessor output and crawler-downloaded product images |
 
-The API and worker create `LOCAL_IMAGE_ROOT`, `ROOM_UPLOAD_DIR`, `PRODUCT_IMAGE_DIR`, and `GENERATED_IMAGE_DIR` on startup. In production, the host path mounted to `/data/images` must still exist and be writable by the container user before uploads are accepted. For the default bind mount, prepare it with:
+The API and worker run `scripts/docker-entrypoint.sh` before booting. It creates `LOCAL_IMAGE_ROOT`, `ROOM_UPLOAD_DIR`, `PRODUCT_IMAGE_DIR`, and `GENERATED_IMAGE_DIR` and relaxes permissions on those mounted directories when the filesystem allows it. `make up` also runs `prepare-docker-dirs` on the host so the default `./data/images` bind mount is not created as a root-owned Docker directory.
 
-```bash
-mkdir -p ai-service/data/images/products ai-service/data/images/rooms ai-service/data/images/generated
-```
-
-If the service is deployed from a different host directory, either keep the same container paths in `.env` or update all four image directory variables together. API responses must remain relative to `LOCAL_IMAGE_ROOT`.
+Product image embeddings read crawler-downloaded images from `PRODUCT_EMBEDDING_IMAGE_ROOT`, defaulting to `/data/pipeline/output/images`, which corresponds to host `../data/output/images`. If the service is deployed with a different data mount, update `PRODUCT_EMBEDDING_IMAGE_ROOT` together with the compose mount. API image responses must remain relative to `LOCAL_IMAGE_ROOT`.
 
 ### Portability Notes
 
